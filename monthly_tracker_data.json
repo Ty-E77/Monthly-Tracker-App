@@ -1420,6 +1420,21 @@
             "description": "Carryover from March 2026",
             "recurrence_count": 1,
             "recurrence_frequency": "None"
+        },
+        {
+            "id": "c0ad7962-ab83-4196-958a-1c1d41f06199",
+            "date": "2026-03-30",
+            "owner": "lexi",
+            "amount": 191.05,
+            "category": "Other",
+            "month_key": "2026-04",
+            "created_at": "2026-04-06T20:58:18",
+            "created_by": "lexi",
+            "entry_type": "revenue",
+            "updated_at": "",
+            "description": "Initial Balance",
+            "recurrence_count": 1,
+            "recurrence_frequency": "None"
         }
     ],
     "savings_goals": {}

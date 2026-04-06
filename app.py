@@ -3916,7 +3916,14 @@ def main() -> None:
     else:
         st.session_state["auto_closeout_notice"] = []
     ensure_result = ensure_month_exists(data, st.session_state["selected_month"])
-    if ensure_result == "updated":
+
+    # Also keep the *next* month's carryover fresh so adding a transaction to the
+    # current month immediately reflects in the following month, even before the
+    # user navigates there.
+    next_key = next_month_key(st.session_state["selected_month"])
+    next_result = ensure_month_exists(data, next_key)
+
+    if ensure_result == "updated" or next_result == "updated":
         save_json_dict(DATA_FILE, data)
 
     if not st.session_state["logged_in"]:
