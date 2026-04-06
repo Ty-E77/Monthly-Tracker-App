@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "Running Supabase sync before commit..."
+python3 sync_supabase_to_json.py
+
+git add monthly_tracker_data.json
+
+echo "Supabase sync complete. Proceeding with commit."
