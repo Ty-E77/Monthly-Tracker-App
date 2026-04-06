@@ -239,7 +239,17 @@ hr {
 #MainMenu,
 footer,
 [data-testid="stStatusWidget"],
-[data-testid="stDecoration"] {
+[data-testid="stDecoration"],
+[data-testid="stToolbar"],
+[data-testid="stAppToolbar"],
+[data-testid="stToolbarActions"] {
+    display: none !important;
+}
+
+header button[title="Profile"],
+header button[aria-label*="Profile"],
+header img[alt*="profile" i],
+header img[alt*="avatar" i] {
     display: none !important;
 }
 
