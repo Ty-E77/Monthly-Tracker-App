@@ -2738,34 +2738,19 @@ def show_analytics(data: dict) -> None:
             revenue_change = curr_summary["revenue"] - prev_summary["revenue"]
             change_pct = (revenue_change / prev_summary["revenue"]) * 100 if prev_summary["revenue"] != 0 else 0
             change_indicator = "📈" if revenue_change >= 0 else "📉"
-            st.markdown(f"""
-            **Revenue Comparison**  
-            Current: {format_currency(curr_summary['revenue'])}  
-            Previous: {format_currency(prev_summary['revenue'])}  
-            {change_indicator} Change: {format_currency(revenue_change)} ({change_pct:+.1f}%)
-            """)
+            st.metric("Revenue Comparison", format_currency(curr_summary["revenue"]), f"{format_currency(revenue_change)} ({change_pct:+.1f}%)")
         
         with comparison_col2:
             expense_change = curr_summary["expense"] - prev_summary["expense"]
             change_pct = (expense_change / prev_summary["expense"]) * 100 if prev_summary["expense"] != 0 else 0
             change_indicator = "📉" if expense_change <= 0 else "📈"
-            st.markdown(f"""
-            **Expense Comparison**  
-            Current: {format_currency(curr_summary['expense'])}  
-            Previous: {format_currency(prev_summary['expense'])}  
-            {change_indicator} Change: {format_currency(expense_change)} ({change_pct:+.1f}%)
-            """)
+            st.metric("Expense Comparison", format_currency(curr_summary["expense"]), f"{format_currency(expense_change)} ({change_pct:+.1f}%)")
         
         with comparison_col3:
             net_change = curr_summary["net"] - prev_summary["net"]
             change_pct = (net_change / abs(prev_summary["net"])) * 100 if prev_summary["net"] != 0 else 0
             change_indicator = "📈" if net_change >= 0 else "📉"
-            st.markdown(f"""
-            **Net Balance Comparison**  
-            Current: {format_currency(curr_summary['net'])}  
-            Previous: {format_currency(prev_summary['net'])}  
-            {change_indicator} Change: {format_currency(net_change)} ({change_pct:+.1f}%)
-            """)
+            st.metric("Net Balance Comparison", format_currency(curr_summary["net"]), f"{format_currency(net_change)} ({change_pct:+.1f}%)")
         
         # Comparison Chart
         comparison_data = {
