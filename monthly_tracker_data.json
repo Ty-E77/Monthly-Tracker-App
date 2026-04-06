@@ -1,58 +1,37 @@
 {
     "budgets": {
         "2026-04": {
-            "shared": {
-                "expense": {
-                    "Rent + Utilities": 0.0,
-                    "Groceries": 0.0,
-                    "Gas": 0.0,
-                    "Car Insurance": 0.0,
-                    "Toiletries": 0.0,
-                    "Eating Out": 0.0,
-                    "Phone Bill": 0.0,
-                    "Subscriptions": 0.0,
-                    "Shopping": 0.0,
-                    "Health": 0.0,
-                    "Entertainment": 0.0,
-                    "Debt Payment": 0.0,
-                    "Savings Transfer": 0.0,
-                    "Travel": 0.0,
-                    "Other": 0.0
-                },
-                "revenue": {
-                    "Paycheck": 0.0,
-                    "Side Hustle": 0.0,
-                    "Cash Gift": 0.0,
-                    "Refund": 0.0,
-                    "Bonus": 0.0,
-                    "Other": 0.0
-                }
-            },
             "tyshawn": {
                 "expense": {
                     "Rent + Utilities": 0.0,
-                    "Groceries": 0.0,
-                    "Gas": 0.0,
-                    "Car Insurance": 0.0,
-                    "Toiletries": 0.0,
-                    "Eating Out": 0.0,
-                    "Phone Bill": 0.0,
-                    "Subscriptions": 0.0,
-                    "Shopping": 0.0,
-                    "Health": 0.0,
-                    "Entertainment": 0.0,
+                    "Groceries": 100.0,
+                    "Gas": 160.0,
+                    "Car Insurance": 135.0,
+                    "Toiletries": 50.0,
+                    "Eating Out": 200.0,
+                    "Phone Bill": 100.0,
+                    "Subscriptions": 12.47,
+                    "Shopping": 20.0,
+                    "Health": 30.0,
+                    "Entertainment": 30.0,
                     "Debt Payment": 0.0,
+                    "Loan Payment": 50.55,
+                    "Credit Card Payment": 300.0,
                     "Savings Transfer": 0.0,
                     "Travel": 0.0,
-                    "Other": 0.0
+                    "Other": 50.0
                 },
                 "revenue": {
-                    "Paycheck": 0.0,
+                    "Paycheck": 1500.0,
                     "Side Hustle": 0.0,
                     "Cash Gift": 0.0,
                     "Refund": 0.0,
                     "Bonus": 0.0,
+                    "Savings Transfer": 0.0,
                     "Other": 0.0
+                },
+                "savings": {
+                    "Savings Deposit": 50.0
                 }
             },
             "lexi": {
@@ -69,6 +48,8 @@
                     "Health": 0.0,
                     "Entertainment": 0.0,
                     "Debt Payment": 0.0,
+                    "Loan Payment": 0.0,
+                    "Credit Card Payment": 0.0,
                     "Savings Transfer": 0.0,
                     "Travel": 0.0,
                     "Other": 0.0
@@ -79,7 +60,11 @@
                     "Cash Gift": 0.0,
                     "Refund": 0.0,
                     "Bonus": 0.0,
+                    "Savings Transfer": 0.0,
                     "Other": 0.0
+                },
+                "savings": {
+                    "Savings Deposit": 0.0
                 }
             }
         }
@@ -96,7 +81,9 @@
             "description": "This is the starting amount for me for April",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:25:30",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "e622e2ca-0b17-417e-ada7-0376fa0659a8",
@@ -104,12 +91,14 @@
             "date": "2026-04-01",
             "entry_type": "revenue",
             "owner": "tyshawn",
-            "category": "Paycheck",
+            "category": "Other",
             "amount": 0.52,
             "description": "Interest Income",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:27:58",
-            "updated_at": "2026-04-05T21:30:21"
+            "updated_at": "2026-04-06T01:08:37",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "b778b95d-7bc6-4a99-9cc0-a17a8fd4787e",
@@ -122,7 +111,9 @@
             "description": "BestBuy - Snack",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:29:54",
-            "updated_at": "2026-04-05T21:30:30"
+            "updated_at": "2026-04-05T21:30:30",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "7d7c2043-9934-400d-bae2-aefb2b970c20",
@@ -135,7 +126,9 @@
             "description": "Food Lion - Water & Chapstick",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:31:12",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "b6b9e23f-90ee-4c56-a311-48df9a1b382c",
@@ -148,7 +141,9 @@
             "description": "Chick Fil A",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:32:01",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "58f6c860-3019-45cd-a0a6-851c20b5f286",
@@ -161,7 +156,9 @@
             "description": "Tropical Smoothie",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:32:27",
-            "updated_at": "2026-04-05T21:32:40"
+            "updated_at": "2026-04-05T21:32:40",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "c9b469e2-df3c-4701-b20b-9ad78b793d7b",
@@ -174,7 +171,9 @@
             "description": "Raising Cane's",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:33:35",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "296a9dbf-fad1-4f13-8197-f57a7fcbad0c",
@@ -187,7 +186,9 @@
             "description": "Best Buy - Snack",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:34:40",
-            "updated_at": "2026-04-05T21:41:12"
+            "updated_at": "2026-04-05T21:41:12",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "1878ba3c-dfdd-45e4-9afd-ad88d64f2d71",
@@ -200,7 +201,9 @@
             "description": "Royal Farms",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:35:09",
-            "updated_at": "2026-04-05T21:42:07"
+            "updated_at": "2026-04-05T21:42:07",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "3b4c136f-151e-49d7-85df-427ca749f86e",
@@ -213,7 +216,9 @@
             "description": "Chick Fil A",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:35:42",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "a81d332a-503c-45f5-a9f0-28f084085fcf",
@@ -226,7 +231,9 @@
             "description": "Wawa",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:36:09",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "f89b5c5c-d946-41bf-a649-e44f59d2e2d7",
@@ -239,7 +246,9 @@
             "description": "Raising Cane's",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:36:56",
-            "updated_at": "2026-04-05T21:38:15"
+            "updated_at": "2026-04-05T21:38:15",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "7e703df1-fab1-482e-952f-e4fd1ca3af38",
@@ -252,7 +261,9 @@
             "description": "Best Buy",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:37:50",
-            "updated_at": "2026-04-05T21:42:00"
+            "updated_at": "2026-04-05T21:42:00",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "4dd922a8-4dbe-4ef3-acb5-0497a0355937",
@@ -265,7 +276,9 @@
             "description": "Chick Fil A",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:39:03",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         },
         {
             "id": "276f2c57-e94b-481b-be32-fb59ed479c1d",
@@ -278,7 +291,9 @@
             "description": "Amazon Prime",
             "created_by": "tyshawn",
             "created_at": "2026-04-05T21:40:08",
-            "updated_at": ""
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         }
     ]
 }
