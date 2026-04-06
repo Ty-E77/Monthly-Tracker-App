@@ -434,7 +434,7 @@ hide_streamlit_floating_ui()
 # Constants
 # -----------------------------
 APP_TITLE = "Monthly Budget + Tracker"
-DATA_FILE = Path("monthly_tracker_data.json")
+DATA_FILE = Path(__file__).parent / "monthly_tracker_data.json"
 USER_CREDENTIALS = {
     "tyshawn": os.getenv("TYSHAWN_PASSWORD", "lexi"),
     "lexi": os.getenv("LEXI_PASSWORD", "tyshawn"),
@@ -883,37 +883,63 @@ def sorted_month_keys(data: dict) -> list[str]:
     return sorted(month_keys)
 
 
-def carryover_from_prior_month(data: dict, new_month_key: str, prior_month_key: str) -> None:
+def carryover_from_prior_month(data: dict, new_month_key: str, prior_month_key: str) -> bool:
+    """Create or update the carryover transaction for each owner from the prior month.
+    Returns True if any transaction was added or updated, False otherwise."""
     year, month = map(int, new_month_key.split("-"))
     carryover_date = date(year, month, 1)
 
     prior_df = transaction_dataframe(data, prior_month_key)
     carryover_description = f"Carryover from {month_label(prior_month_key)}"
 
+    changed = False
     for owner in OWNERS:
         owner_prior_df = owner_filtered_df(prior_df, owner)
         owner_prior_net = float(monthly_summary(owner_prior_df)["net"])
-        if owner_prior_net == 0:
-            continue
 
-        existing_owner_carryover = any(
-            txn.get("month_key") == new_month_key
-            and txn.get("owner") == owner
-            and txn.get("category") == CARRYOVER_CATEGORY
-            and txn.get("description", "") == carryover_description
-            for txn in data.get("transactions", [])
+        # Find any existing carryover transaction for this owner/month
+        existing_txn = next(
+            (
+                txn for txn in data.get("transactions", [])
+                if txn.get("month_key") == new_month_key
+                and txn.get("owner") == owner
+                and txn.get("category") == CARRYOVER_CATEGORY
+                and txn.get("description", "") == carryover_description
+            ),
+            None,
         )
-        if existing_owner_carryover:
+
+        if owner_prior_net == 0:
+            # Prior month net is now zero — remove stale carryover if present
+            if existing_txn:
+                data["transactions"].remove(existing_txn)
+                changed = True
             continue
 
+        new_entry_type = "revenue" if owner_prior_net > 0 else "expense"
+        new_amount = round(abs(owner_prior_net), 2)
+
+        if existing_txn:
+            # Update only if the amount or direction changed
+            if (
+                round(existing_txn.get("amount", 0), 2) != new_amount
+                or existing_txn.get("entry_type") != new_entry_type
+            ):
+                existing_txn["amount"] = new_amount
+                existing_txn["entry_type"] = new_entry_type
+                existing_txn["updated_at"] = datetime.now().isoformat(timespec="seconds")
+                changed = True
+            continue
+
+        # No existing carryover — create one
         carryover_txn = {
             "id": str(uuid.uuid4()),
             "month_key": new_month_key,
             "date": carryover_date.isoformat(),
-            "entry_type": "revenue" if owner_prior_net > 0 else "expense",
+            "entry_type": new_entry_type,
             "owner": owner,
             "category": CARRYOVER_CATEGORY,
-            "amount": abs(owner_prior_net),
+            "amount": new_amount,
             "description": carryover_description,
             "created_by": current_username() or "system",
             "created_at": datetime.now().isoformat(timespec="seconds"),
@@ -923,6 +949,9 @@ def carryover_from_prior_month(data: dict, new_month_key: str, prior_month_key: 
             "tags": "",
         }
         data.setdefault("transactions", []).append(carryover_txn)
+        changed = True
+
+    return changed
 
 
 def apply_prior_month_actuals_to_budget(data: dict, new_month_key: str, prior_month_key: str) -> None:
@@ -978,10 +1007,8 @@ def ensure_month_exists(data: dict, month_key: str) -> str | None:
         if prior_key not in data["budgets"]:
             prior_key = previous_existing_budget_month_key(data, month_key)
         if prior_key and prior_key in data["budgets"]:
-            before_count = len(data.get("transactions", []))
-            carryover_from_prior_month(data, month_key, prior_key)
-            after_count = len(data.get("transactions", []))
-            if after_count > before_count:
+            changed = carryover_from_prior_month(data, month_key, prior_key)
+            if changed:
                 return "updated"
         return None
 
