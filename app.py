@@ -295,6 +295,25 @@ button[aria-label*="Streamlit" i] {
     .stDataFrame {
         font-size: 0.85rem !important;
     }
+
+    /* Stack all multi-column layouts on phones */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        gap: 0.6rem !important;
+    }
+
+    [data-testid="column"] {
+        min-width: 100% !important;
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Better tab usability on smaller screens */
+    [data-testid="stTabs"] [role="tablist"] {
+        gap: 0.25rem !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
 }
 
 /* Tablets */
@@ -1082,7 +1101,23 @@ def sanitize_loaded_data(data: dict) -> dict:
 # -----------------------------
 # Helpers: session state
 # -----------------------------
+def detect_mobile_client() -> bool:
+    """Best-effort mobile detection from request user-agent."""
+    user_agent = ""
+    try:
+        headers = getattr(st.context, "headers", {})
+        if headers:
+            user_agent = str(headers.get("User-Agent", ""))
+    except Exception:
+        user_agent = ""
+
+    ua = user_agent.lower()
+    mobile_tokens = ["iphone", "android", "mobile", "ipad", "ipod"]
+    return any(token in ua for token in mobile_tokens)
+
+
 def init_session_state() -> None:
+    default_mobile = detect_mobile_client()
     defaults = {
         "logged_in": False,
         "current_user": None,
@@ -1097,11 +1132,75 @@ def init_session_state() -> None:
         "search_end_date": date.today(),
         "undo_action": None,
         "auto_closeout_notice": [],
-        "compact_dashboard_mode": False,
+        "is_mobile_client": default_mobile,
+        "compact_dashboard_mode": default_mobile,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+
+
+def show_mobile_toolbar(data: dict) -> None:
+    """Top toolbar for phone users with same navigation and month controls."""
+    if not st.session_state.get("is_mobile_client", False):
+        return
+
+    st.markdown("### 📱 Phone Quick Controls")
+    nav_items = [
+        ("dashboard", "🏠 Dashboard"),
+        ("quick_add", "⚡ Quick Add"),
+        ("tracker", "🧾 Monthly Tracker"),
+        ("budget", "📘 Budget Planner"),
+        ("analytics", "📊 Analytics"),
+        ("goals", "🎯 Savings Goals"),
+        ("settings", "⚙️ Settings"),
+    ]
+    nav_labels = [label for _, label in nav_items]
+    current_page = st.session_state.get("page", "dashboard")
+    current_page_label = next((label for page, label in nav_items if page == current_page), nav_labels[0])
+
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_page_label = st.selectbox(
+            "Page",
+            options=nav_labels,
+            index=nav_labels.index(current_page_label),
+            key="mobile_page_switcher_select",
+        )
+    with col2:
+        month_keys = sorted_month_keys(data)
+        month_labels = [month_label(month_key) for month_key in month_keys]
+        selected_month_key = st.session_state.get("selected_month", month_key_from_date(date.today()))
+        if selected_month_key not in month_keys:
+            ensure_month_exists(data, selected_month_key)
+            save_json_dict(DATA_FILE, data)
+            month_keys = sorted_month_keys(data)
+            month_labels = [month_label(month_key) for month_key in month_keys]
+        selected_month_label = st.selectbox(
+            "Month",
+            options=month_labels,
+            index=month_keys.index(st.session_state["selected_month"]),
+            key="mobile_month_switcher_select",
+        )
+
+    selected_page = next((page for page, label in nav_items if label == selected_page_label), current_page)
+    selected_month = label_to_month_key(selected_month_label)
+
+    page_changed = selected_page != st.session_state["page"]
+    month_changed = selected_month != st.session_state["selected_month"]
+
+    if month_changed:
+        st.session_state["selected_month"] = selected_month
+        ensure_month_exists(data, selected_month)
+        save_json_dict(DATA_FILE, data)
+
+    if page_changed:
+        st.session_state["page"] = selected_page
+
+    if page_changed or month_changed:
+        st.rerun()
+
+    st.divider()
 
 
 # -----------------------------
@@ -2706,6 +2805,8 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
         st.info("📭 No entries in this section yet.")
         return
 
+    section_key = section_title.lower().replace(" ", "_")
+
     sorted_df = df.sort_values(["date", "created_at"], ascending=[False, False])
     for _, row in sorted_df.iterrows():
         transaction = next((item for item in data["transactions"] if item["id"] == row["id"]), None)
@@ -2740,13 +2841,13 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
                         st.session_state["editing_transaction_id"] = row["id"]
                         st.rerun()
                     if st.button("🗑️ Delete", key=f"delete_txn_btn_{section_title}_{row['id']}", use_container_width=True):
-                        st.session_state[f"confirm_delete_{row['id']}"] = True
+                        st.session_state[f"confirm_delete_{section_key}_{row['id']}"] = True
                         st.rerun()
                 
-                if st.session_state.get(f"confirm_delete_{row['id']}"):
+                if st.session_state.get(f"confirm_delete_{section_key}_{row['id']}"):
                     col_confirm1, col_confirm2 = st.columns(2)
                     with col_confirm1:
-                        if st.button("✅ Confirm Delete", key=f"confirm_delete_btn_{row['id']}", use_container_width=True):
+                        if st.button("✅ Confirm Delete", key=f"confirm_delete_btn_{section_key}_{row['id']}", use_container_width=True):
                             delete_index = next((idx for idx, item in enumerate(data["transactions"]) if item["id"] == row["id"]), len(data["transactions"]))
                             set_undo_action(
                                 "delete",
@@ -2759,11 +2860,11 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
                             success_placeholder.success("✅ Entry deleted.")
                             if st.session_state.get("editing_transaction_id") == row["id"]:
                                 st.session_state["editing_transaction_id"] = None
-                            st.session_state[f"confirm_delete_{row['id']}"] = False
+                            st.session_state[f"confirm_delete_{section_key}_{row['id']}"] = False
                             st.rerun()
                     with col_confirm2:
-                        if st.button("❌ Cancel", key=f"cancel_delete_btn_{row['id']}", use_container_width=True):
-                            st.session_state[f"confirm_delete_{row['id']}"] = False
+                        if st.button("❌ Cancel", key=f"cancel_delete_btn_{section_key}_{row['id']}", use_container_width=True):
+                            st.session_state[f"confirm_delete_{section_key}_{row['id']}"] = False
                             st.rerun()
                 elif not can_edit:
                     st.caption("🔒 Only the creator can edit this entry.")
@@ -3740,6 +3841,7 @@ def main() -> None:
         return
 
     show_sidebar(data)
+    show_mobile_toolbar(data)
 
     if st.session_state["page"] == "dashboard":
         show_dashboard(data)

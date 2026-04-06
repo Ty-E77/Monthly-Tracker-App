@@ -1421,5 +1421,6 @@
             "recurrence_frequency": "None",
             "recurrence_count": 1
         }
-    ]
+    ],
+    "savings_goals": {}
 }
