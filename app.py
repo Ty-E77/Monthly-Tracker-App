@@ -240,7 +240,6 @@ hr {
 footer,
 [data-testid="stStatusWidget"],
 [data-testid="stDecoration"],
-[data-testid="stToolbar"],
 [data-testid="stAppToolbar"],
 [data-testid="stToolbarActions"] {
     display: none !important;
@@ -249,7 +248,8 @@ footer,
 header button[title="Profile"],
 header button[aria-label*="Profile"],
 header img[alt*="profile" i],
-header img[alt*="avatar" i] {
+header img[alt*="avatar" i],
+header [data-testid="stToolbar"] button:not([data-testid="collapsedControl"]) {
     display: none !important;
 }
 
@@ -264,11 +264,21 @@ button[aria-label*="Streamlit" i] {
 }
 
 /* Keep sidebar reopen control visible */
+[data-testid="stToolbar"] {
+    position: fixed !important;
+    top: 0.75rem !important;
+    left: 0.75rem !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: 10000 !important;
+}
+
 [data-testid="collapsedControl"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
     z-index: 10000 !important;
+    position: relative !important;
 }
 
 /* ---------------------------------
@@ -280,6 +290,11 @@ button[aria-label*="Streamlit" i] {
     h1 { font-size: 1.7rem !important; }
     h2 { font-size: 1.35rem !important; }
     h3 { font-size: 1.1rem !important; }
+
+    [data-testid="stToolbar"] {
+        top: 0.65rem !important;
+        left: 0.65rem !important;
+    }
 
     [data-testid="stAppViewContainer"] {
         padding-left: 0.4rem;
