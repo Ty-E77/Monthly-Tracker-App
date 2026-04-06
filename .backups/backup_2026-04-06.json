@@ -135,74 +135,6 @@
                     "Savings Deposit": 0.0
                 }
             }
-        },
-        "2026-03": {
-            "tyshawn": {
-                "expense": {
-                    "Rent + Utilities": 0.0,
-                    "Groceries": 0.0,
-                    "Gas": 0.0,
-                    "Car Insurance": 0.0,
-                    "Toiletries": 0.0,
-                    "Eating Out": 0.0,
-                    "Phone Bill": 0.0,
-                    "Subscriptions": 0.0,
-                    "Shopping": 0.0,
-                    "Health": 0.0,
-                    "Entertainment": 0.0,
-                    "Debt Payment": 0.0,
-                    "Loan Payment": 0.0,
-                    "Credit Card Payment": 0.0,
-                    "Savings Transfer": 0.0,
-                    "Travel": 0.0,
-                    "Other": 0.0
-                },
-                "revenue": {
-                    "Paycheck": 0.0,
-                    "Side Hustle": 0.0,
-                    "Cash Gift": 0.0,
-                    "Refund": 0.0,
-                    "Bonus": 0.0,
-                    "Savings Transfer": 0.0,
-                    "Other": 0.0
-                },
-                "savings": {
-                    "Savings Deposit": 0.0
-                }
-            },
-            "lexi": {
-                "expense": {
-                    "Rent + Utilities": 0.0,
-                    "Groceries": 0.0,
-                    "Gas": 0.0,
-                    "Car Insurance": 0.0,
-                    "Toiletries": 0.0,
-                    "Eating Out": 0.0,
-                    "Phone Bill": 0.0,
-                    "Subscriptions": 0.0,
-                    "Shopping": 0.0,
-                    "Health": 0.0,
-                    "Entertainment": 0.0,
-                    "Debt Payment": 0.0,
-                    "Loan Payment": 0.0,
-                    "Credit Card Payment": 0.0,
-                    "Savings Transfer": 0.0,
-                    "Travel": 0.0,
-                    "Other": 0.0
-                },
-                "revenue": {
-                    "Paycheck": 0.0,
-                    "Side Hustle": 0.0,
-                    "Cash Gift": 0.0,
-                    "Refund": 0.0,
-                    "Bonus": 0.0,
-                    "Savings Transfer": 0.0,
-                    "Other": 0.0
-                },
-                "savings": {
-                    "Savings Deposit": 0.0
-                }
-            }
         }
     },
     "transactions": [
@@ -430,7 +362,21 @@
             "updated_at": "",
             "recurrence_frequency": "None",
             "recurrence_count": 1
+        },
+        {
+            "id": "febe0e38-df13-46ac-9ce5-cc64e3fe1374",
+            "month_key": "2026-05",
+            "date": "2026-05-01",
+            "entry_type": "savings",
+            "owner": "shared",
+            "category": "Carryover Balance",
+            "amount": 33.85000000000002,
+            "description": "Carryover from April 2026",
+            "created_by": "tyshawn",
+            "created_at": "2026-04-06T02:12:44",
+            "updated_at": "",
+            "recurrence_frequency": "None",
+            "recurrence_count": 1
         }
-    ],
-    "savings_goals": {}
+    ]
 }

@@ -1,6 +1,7 @@
 import calendar
 import json
 import math
+import os
 import time
 import uuid
 from copy import deepcopy
@@ -416,8 +417,8 @@ hide_streamlit_floating_ui()
 APP_TITLE = "Monthly Budget + Tracker"
 DATA_FILE = Path("monthly_tracker_data.json")
 USER_CREDENTIALS = {
-    "tyshawn": "lexi",
-    "lexi": "tyshawn",
+    "tyshawn": os.getenv("TYSHAWN_PASSWORD", "lexi"),
+    "lexi": os.getenv("LEXI_PASSWORD", "tyshawn"),
 }
 DISPLAY_NAMES = {
     "tyshawn": "TyShawn",
@@ -425,11 +426,10 @@ DISPLAY_NAMES = {
 }
 OWNERS = ["tyshawn", "lexi"]
 OWNER_LABELS = {
-    "shared": "Both / Shared",
     "tyshawn": "TyShawn",
     "lexi": "Lexi",
 }
-TRANSACTION_OWNERS = ["tyshawn", "lexi", "shared"]
+TRANSACTION_OWNERS = ["tyshawn", "lexi"]
 RECURRENCE_FREQUENCIES = ["None", "Monthly"]
 ENTRY_TYPE_LABELS = {
     "expense": "Expense",
@@ -495,6 +495,41 @@ def empty_budget_block():
     }
 
 
+def get_user_categories(data: dict, entry_type: str) -> list[str]:
+    """Return custom categories if available, otherwise return defaults."""
+    custom = data.get("custom_categories", {}).get(entry_type, [])
+    if custom:
+        return custom
+    
+    if entry_type == "expense":
+        return EXPENSE_CATEGORIES
+    elif entry_type == "revenue":
+        return REVENUE_CATEGORIES
+    else:
+        return SAVINGS_CATEGORIES
+
+
+def get_all_tags(data: dict) -> list[str]:
+    """Return all existing transaction tags from the data."""
+    all_tags = set()
+    for txn in data.get("transactions", []):
+        tags = txn.get("tags", "")
+        if tags:
+            for tag in tags.split(","):
+                all_tags.add(tag.strip())
+    return sorted(list(all_tags))
+
+
+def add_custom_category(data: dict, entry_type: str, category_name: str) -> None:
+    """Add a custom category to the data store."""
+    if "custom_categories" not in data:
+        data["custom_categories"] = {"expense": [], "revenue": [], "savings": []}
+    
+    if category_name not in data["custom_categories"].get(entry_type, []):
+        data["custom_categories"][entry_type].append(category_name)
+        save_json_dict(DATA_FILE, data)
+
+
 def empty_month_record():
     return {
         owner: empty_budget_block() for owner in OWNERS
@@ -536,6 +571,15 @@ def load_json_dict(file_path: Path) -> dict:
 def save_json_dict(file_path: Path, data: dict) -> None:
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=4)
+    
+    # Auto-backup: create timestamped backup
+    backup_dir = file_path.parent / ".backups"
+    backup_dir.mkdir(exist_ok=True)
+    today = date.today().isoformat()
+    backup_file = backup_dir / f"backup_{today}.json"
+    if not backup_file.exists():
+        with open(backup_file, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=4)
 
 
 # -----------------------------
@@ -614,29 +658,45 @@ def carryover_from_prior_month(data: dict, new_month_key: str, prior_month_key: 
 
 
 def apply_prior_month_actuals_to_budget(data: dict, new_month_key: str, prior_month_key: str) -> None:
-    """Set new month budgets to prior month actual totals by owner/category."""
-    prior_df = transaction_dataframe(data, prior_month_key)
+    """Set new month budgets to rolling average of prior 2-3 months by owner/category."""
     category_map = {
         "expense": EXPENSE_CATEGORIES,
         "revenue": REVENUE_CATEGORIES,
         "savings": SAVINGS_CATEGORIES,
     }
+    
+    # Collect prior 2 months of data
+    prior_months = [prior_month_key]
+    temp_key = prior_month_key
+    for _ in range(1):
+        temp_key = previous_month_key(temp_key)
+        if temp_key in data.get("budgets", {}):
+            prior_months.append(temp_key)
 
     for owner in OWNERS:
-        owner_df = owner_filtered_df(prior_df, owner)
         owner_budget = data["budgets"][new_month_key].get(owner, empty_budget_block())
 
         for entry_type, categories in category_map.items():
-            actuals = (
-                owner_df[owner_df["entry_type"] == entry_type]
-                .groupby("category", dropna=False)["amount"]
-                .sum()
-                .to_dict()
-                if not owner_df.empty
-                else {}
-            )
+            category_actuals = {cat: [] for cat in categories}
+            
+            # Gather actuals from prior months
+            for month in prior_months:
+                month_df = transaction_dataframe(data, month)
+                owner_df = owner_filtered_df(month_df, owner)
+                actuals = (
+                    owner_df[owner_df["entry_type"] == entry_type]
+                    .groupby("category", dropna=False)["amount"]
+                    .sum()
+                    .to_dict()
+                    if not owner_df.empty
+                    else {}
+                )
+                for cat in categories:
+                    category_actuals[cat].append(float(actuals.get(cat, 0.0)))
+            
+            # Calculate average
             owner_budget[entry_type] = {
-                category: float(actuals.get(category, 0.0))
+                category: sum(category_actuals[category]) / len(category_actuals[category]) if category_actuals[category] else 0.0
                 for category in categories
             }
 
@@ -804,6 +864,7 @@ def add_transaction(
     created_by: str,
     recurrence_frequency: str = "None",
     recurrence_count: int = 1,
+    tags: str = "",
 ) -> dict:
     ensure_month_exists(data, month_key)
     transaction = {
@@ -820,6 +881,7 @@ def add_transaction(
         "updated_at": "",
         "recurrence_frequency": recurrence_frequency,
         "recurrence_count": int(recurrence_count),
+        "tags": tags,
     }
     data["transactions"].append(transaction)
     return transaction
@@ -1006,6 +1068,58 @@ def get_daily_average_spending(df: pd.DataFrame, month_key: str) -> float:
         next_month = date(year, month + 1, 1)
     days_in_month = (next_month - date(year, month, 1)).days
     return total_expenses / days_in_month
+
+
+def get_budget_warnings(data: dict, month_key: str, owner: str) -> list[dict]:
+    """Return list of budget alerts for expenses at 80%+ of budget."""
+    df = transaction_dataframe(data, month_key)
+    owner_df = owner_filtered_df(df, owner)
+    budget_record = data["budgets"].get(month_key, {}).get(owner, empty_budget_block())
+    
+    warnings = []
+    expenses = owner_df[owner_df["entry_type"] == "expense"].groupby("category")["amount"].sum().to_dict()
+    
+    for category, budget_amount in budget_record["expense"].items():
+        if budget_amount > 0:
+            actual = float(expenses.get(category, 0.0))
+            percentage = (actual / budget_amount) * 100
+            if percentage >= 80:
+                warnings.append({
+                    "category": category,
+                    "actual": actual,
+                    "budget": budget_amount,
+                    "percentage": percentage,
+                })
+    return warnings
+
+
+def detect_duplicate_transactions(data: dict, new_txn: dict, tolerance_minutes: int = 5) -> list[dict]:
+    """Check for potential duplicate transactions (same amount, category, owner within N minutes)."""
+    new_date = datetime.strptime(new_txn["date"], "%Y-%m-%d").date()
+    duplicates = []
+    
+    for txn in data.get("transactions", []):
+        if txn["id"] == new_txn.get("id"):
+            continue
+        if (txn["category"] == new_txn["category"] and
+            txn["owner"] == new_txn["owner"] and
+            txn["entry_type"] == new_txn["entry_type"] and
+            abs(float(txn["amount"]) - float(new_txn["amount"])) < 0.01):
+            txn_date = datetime.strptime(txn["date"], "%Y-%m-%d").date()
+            if abs((txn_date - new_date).days) <= 1:
+                duplicates.append(txn)
+    return duplicates
+
+
+def calculate_savings_rate(df: pd.DataFrame) -> float:
+    """Return savings rate as percentage of revenue."""
+    if df.empty:
+        return 0.0
+    revenue = float(df[df["entry_type"] == "revenue"]["amount"].sum())
+    if revenue <= 0:
+        return 0.0
+    savings = float(df[df["entry_type"] == "savings"]["amount"].sum())
+    return (savings / revenue) * 100
 
 
 def get_budget_status(data: dict, month_key: str, owner: str) -> dict:
@@ -1286,11 +1400,28 @@ def show_month_selector(data: dict) -> None:
         st.rerun()
 
     current_key = month_key_from_date(date.today())
-    if st.session_state["selected_month"] != current_key:
-        if st.button("Jump to Current Month", key="nav_jump_current_month_btn", use_container_width=True):
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("📅 This Month", key="nav_jump_current_month_btn", use_container_width=True):
             ensure_month_exists(data, current_key)
             save_json_dict(DATA_FILE, data)
             st.session_state["selected_month"] = current_key
+            st.rerun()
+    with col2:
+        prev_key = previous_month_key(current_key)
+        if st.button("⬅️ Previous", key="nav_jump_prev_month_btn", use_container_width=True):
+            if prev_key not in month_keys:
+                ensure_month_exists(data, prev_key)
+                save_json_dict(DATA_FILE, data)
+            st.session_state["selected_month"] = prev_key
+            st.rerun()
+    with col3:
+        next_key = f"{int(current_key[:4])}-{int(current_key[5:]) + 1:02d}" if int(current_key[5:]) < 12 else f"{int(current_key[:4]) + 1}-01"
+        if st.button("➡️ Next", key="nav_jump_next_month_btn", use_container_width=True):
+            if next_key not in month_keys:
+                ensure_month_exists(data, next_key)
+                save_json_dict(DATA_FILE, data)
+            st.session_state["selected_month"] = next_key
             st.rerun()
 
 
@@ -1387,6 +1518,8 @@ def show_sidebar(data: dict) -> None:
             ("tracker", "🧾 Monthly Tracker", "nav_tracker_btn"),
             ("budget", "📘 Budget Planner", "nav_budget_btn"),
             ("analytics", "📊 Analytics", "nav_analytics_btn"),
+            ("goals", "🎯 Savings Goals", "nav_goals_btn"),
+            ("settings", "⚙️ Settings", "nav_settings_btn"),
         ]
 
         for page_name, label, key in nav_items:
@@ -1413,7 +1546,187 @@ def show_sidebar(data: dict) -> None:
 
 
 # -----------------------------
-# Dashboard
+
+def plot_spending_by_category(df: pd.DataFrame, title: str = "Spending by Category") -> None:
+    """Display pie chart of spending by category."""
+    if df.empty:
+        st.info("No spending data yet.")
+        return
+    
+    expenses = df[df["entry_type"] == "expense"]
+    if expenses.empty:
+        st.info("No expenses yet.")
+        return
+    
+    spending = expenses.groupby("category")["amount"].sum().sort_values(ascending=False).head(10)
+    
+    fig, ax = plt.subplots(figsize=(8, 5), facecolor='white')
+    colors = ['#e74c3c', '#e67e22', '#f39c12', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c', '#34495e', '#c0392b']
+    ax.pie(spending.values, labels=spending.index, autopct='%1.1f%%', colors=colors[:len(spending)], startangle=90)
+    ax.set_title(title, fontsize=12, fontweight='bold')
+    st.pyplot(fig, use_container_width=True)
+
+
+def show_spending_velocity(df: pd.DataFrame, month_key: str) -> None:
+    """Show projected end-of-month spending based on current pace."""
+    if df.empty:
+        st.info("No spending data yet.")
+        return
+    
+    expenses = df[df["entry_type"] == "expense"]
+    if expenses.empty:
+        return
+    
+    year, month = map(int, month_key.split("-"))
+    days_in_month = 31 if month in [1, 3, 5, 7, 8, 10, 12] else 30 if month != 2 else 28
+    days_elapsed = max(1, (date.today() - date(year, month, 1)).days + 1)
+    
+    if days_elapsed < days_in_month:
+        total_spent = float(expenses["amount"].sum())
+        daily_avg = total_spent / days_elapsed
+        projected = daily_avg * days_in_month
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Daily Average Spend", format_currency(daily_avg))
+        with col2:
+            st.metric("Projected Month Total", format_currency(projected))
+
+
+def compare_with_previous_month(data: dict, month_key: str) -> None:
+    """Show side-by-side comparison with previous month."""
+    prev_key = previous_month_key(month_key)
+    
+    curr_df = transaction_dataframe(data, month_key)
+    prev_df = transaction_dataframe(data, prev_key) if prev_key in data.get("budgets", {}) else pd.DataFrame()
+    
+    curr_sum = monthly_summary(curr_df)
+    prev_sum = monthly_summary(prev_df) if not prev_df.empty else {k: 0.0 for k in ["revenue", "expense", "savings", "net"]}
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.subheader("Revenue")
+        st.metric("This Month", format_currency(curr_sum["revenue"]), 
+                 f"{format_currency(curr_sum['revenue'] - prev_sum['revenue'])} vs prev")
+    with col2:
+        st.subheader("Expenses")
+        st.metric("This Month", format_currency(curr_sum["expense"]), 
+                 f"{format_currency(curr_sum['expense'] - prev_sum['expense'])} vs prev")
+    with col3:
+        st.subheader("Net")
+        st.metric("This Month", format_currency(curr_sum["net"]), 
+                 f"{format_currency(curr_sum['net'] - prev_sum['net'])} vs prev")
+
+
+def get_seasonal_comparison(data: dict, month_key: str) -> dict:
+    """Compare current month to same month last year."""
+    year, month = map(int, month_key.split("-"))
+    prev_year_key = f"{year - 1}-{month:02d}"
+    
+    curr_df = transaction_dataframe(data, month_key)
+    prev_year_df = transaction_dataframe(data, prev_year_key) if prev_year_key in data.get("budgets", {}) else pd.DataFrame()
+    
+    curr_sum = monthly_summary(curr_df)
+    prev_year_sum = monthly_summary(prev_year_df) if not prev_year_df.empty else {k: 0.0 for k in ["revenue", "expense", "savings", "net"]}
+    
+    return {
+        "current": curr_sum,
+        "previous_year": prev_year_sum,
+        "has_prev_year": not prev_year_df.empty
+    }
+
+
+def import_transactions_from_csv(data: dict, uploaded_file) -> int:
+    """Parse CSV and import transactions. Returns count imported."""
+    try:
+        df = pd.read_csv(uploaded_file)
+        required_cols = ["date", "entry_type", "owner", "category", "amount"]
+        if not all(col in df.columns for col in required_cols):
+            st.error("CSV must have columns: date, entry_type, owner, category, amount")
+            return 0
+        
+        count = 0
+        for _, row in df.iterrows():
+            try:
+                entry_date = pd.to_datetime(row["date"]).date()
+                month_key = month_key_from_date(entry_date)
+                add_transaction(
+                    data, month_key, entry_date, row["entry_type"], row["owner"],
+                    row["category"], float(row["amount"]), 
+                    row.get("description", ""), "import"
+                )
+                count += 1
+            except Exception as e:
+                st.warning(f"Skipped row: {str(e)}")
+        
+        if count > 0:
+            save_json_dict(DATA_FILE, data)
+        return count
+    except Exception as e:
+        st.error(f"Import failed: {str(e)}")
+        return 0
+
+
+def show_bill_reminders(data: dict, month_key: str) -> None:
+    """Display recurring transactions (bills) for the month."""
+    df = transaction_dataframe(data, month_key)
+    recurring = df[df["recurrence_frequency"] != "None"].copy()
+    
+    if recurring.empty:
+        st.info("No recurring bills set up yet.")
+        return
+    
+    st.subheader("Recurring Bills & Income")
+    for _, row in recurring.iterrows():
+        icon = "📥" if row["entry_type"] == "revenue" else "📤"
+        st.write(f"{icon} **{row['category']}** • {OWNER_LABELS[row['owner']]} • {format_currency(row['amount'])}")
+        st.caption(f"Added by {DISPLAY_NAMES.get(row['created_by'], row['created_by'])}")
+
+
+def show_savings_goals(data: dict) -> None:
+    """Track and display savings goals."""
+    if "savings_goals" not in data:
+        data["savings_goals"] = {}
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.subheader("Savings Goals")
+    with col2:
+        if st.button("Add Goal", key="add_goal_btn"):
+            st.session_state["adding_goal"] = True
+    
+    if st.session_state.get("adding_goal"):
+        with st.form("add_goal_form"):
+            goal_name = st.text_input("Goal Name", placeholder="Emergency Fund")
+            target_amount = st.number_input("Target Amount", min_value=0.0, step=100.0)
+            submit = st.form_submit_button("Create Goal")
+            
+            if submit and goal_name:
+                data["savings_goals"][goal_name] = {
+                    "target": target_amount,
+                    "created": date.today().isoformat(),
+                    "current": 0.0
+                }
+                save_json_dict(DATA_FILE, data)
+                st.session_state["adding_goal"] = False
+                st.rerun()
+    
+    for goal_name, goal_data in data.get("savings_goals", {}).items():
+        target = goal_data.get("target", 0.0)
+        current = goal_data.get("current", 0.0)
+        pct = (current / target * 100) if target > 0 else 0
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.progress(min(pct / 100, 1.0), text=f"{goal_name}: {format_currency(current)}/{format_currency(target)} ({pct:.0f}%)")
+        with col2:
+            if st.button("✏️", key=f"edit_goal_{goal_name}", help="Edit goal"):
+                st.session_state[f"edit_goal_{goal_name}"] = True
+    
+    save_json_dict(DATA_FILE, data)
+
+
+# Dashboard page
 # -----------------------------
 def show_dashboard(data: dict) -> None:
     if st.session_state.get("login_success"):
@@ -1524,6 +1837,43 @@ def show_dashboard(data: dict) -> None:
         metric_card("Total Net", format_currency(summary["net"]))
 
     st.divider()
+    
+    # Visualizations and Comparisons
+    viz_col1, viz_col2 = st.columns(2)
+    with viz_col1:
+        st.markdown("### 📊 Category Breakdown")
+        plot_spending_by_category(personal_df, f"Spending by Category - {month_label(month_key)}")
+    
+    with viz_col2:
+        st.markdown("### ⚡ Spending Velocity")
+        show_spending_velocity(personal_df, month_key)
+    
+    st.divider()
+    
+    st.markdown("### 📈 Month Comparison")
+    compare_with_previous_month(data, month_key)
+    
+    st.divider()
+    
+    # Seasonal Comparison
+    seasonal = get_seasonal_comparison(data, month_key)
+    if seasonal["has_prev_year"]:
+        st.markdown("### 📅 Year-over-Year Comparison")
+        col1, col2, col3 = st.columns(3)
+        prev_year = seasonal["previous_year"]
+        with col1:
+            st.metric("Revenue vs Last Year", 
+                     format_currency(seasonal["current"]["revenue"]),
+                     f"{format_currency(seasonal['current']['revenue'] - prev_year['revenue'])}")
+        with col2:
+            st.metric("Expenses vs Last Year",
+                     format_currency(seasonal["current"]["expense"]),
+                     f"{format_currency(seasonal['current']['expense'] - prev_year['expense'])}")
+        with col3:
+            st.metric("Savings vs Last Year",
+                     format_currency(seasonal["current"]["savings"]),
+                     f"{format_currency(seasonal['current']['savings'] - prev_year['savings'])}")
+        st.divider()
     
     st.markdown("### 📝 Recent Entries")
     if df.empty:
@@ -1781,12 +2131,25 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
                         st.session_state["editing_transaction_id"] = row["id"]
                         st.rerun()
                     if st.button("🗑️ Delete", key=f"delete_txn_btn_{section_title}_{row['id']}", use_container_width=True):
-                        data["transactions"] = [item for item in data["transactions"] if item["id"] != row["id"]]
-                        save_json_dict(DATA_FILE, data)
-                        st.success("✅ Entry deleted.")
-                        if st.session_state.get("editing_transaction_id") == row["id"]:
-                            st.session_state["editing_transaction_id"] = None
+                        st.session_state[f"confirm_delete_{row['id']}"] = True
                         st.rerun()
+                
+                if st.session_state.get(f"confirm_delete_{row['id']}"):
+                    col_confirm1, col_confirm2 = st.columns(2)
+                    with col_confirm1:
+                        if st.button("✅ Confirm Delete", key=f"confirm_delete_btn_{row['id']}", use_container_width=True):
+                            data["transactions"] = [item for item in data["transactions"] if item["id"] != row["id"]]
+                            save_json_dict(DATA_FILE, data)
+                            success_placeholder = st.empty()
+                            success_placeholder.success("✅ Entry deleted.")
+                            if st.session_state.get("editing_transaction_id") == row["id"]:
+                                st.session_state["editing_transaction_id"] = None
+                            st.session_state[f"confirm_delete_{row['id']}"] = False
+                            st.rerun()
+                    with col_confirm2:
+                        if st.button("❌ Cancel", key=f"cancel_delete_btn_{row['id']}", use_container_width=True):
+                            st.session_state[f"confirm_delete_{row['id']}"] = False
+                            st.rerun()
                 else:
                     st.caption("🔒 Only the creator can edit this entry.")
 
@@ -2010,6 +2373,24 @@ def show_tracker(data: dict) -> None:
 
     st.divider()
     
+    # Bill Reminders and CSV Import
+    import_col, bills_col = st.columns(2)
+    with import_col:
+        st.markdown("### 📥 Import Transactions")
+        uploaded_file = st.file_uploader("Upload CSV file", type="csv", key="transaction_csv_uploader")
+        if uploaded_file is not None:
+            if st.button("Import Transactions", key="import_csv_btn"):
+                count = import_transactions_from_csv(data, uploaded_file)
+                if count > 0:
+                    st.success(f"✅ Imported {count} transactions successfully!")
+                    st.rerun()
+    
+    with bills_col:
+        st.markdown("### 📅 Recurring Bills & Income")
+        show_bill_reminders(data, month_key)
+    
+    st.divider()
+    
     tab_all, tab_ty, tab_lexi = st.tabs([
         "📋 All Entries",
         "👤 TyShawn",
@@ -2043,6 +2424,7 @@ def render_budget_editor(data: dict, month_key: str, owner: str) -> None:
     budget_record = data["budgets"][month_key][owner]
 
     st.markdown(f"### 💵 {OWNER_LABELS[owner]} Budgets")
+    st.caption("💡 Tip: Budgets auto-adjust to your actual spending from the previous month to keep them realistic.")
     expense_tab, revenue_tab, savings_tab = st.tabs(["💸 Expenses", "📈 Revenue", "🎯 Savings"])
 
     with expense_tab:
@@ -2079,7 +2461,6 @@ def render_budget_editor(data: dict, month_key: str, owner: str) -> None:
                 data["budgets"][month_key][owner]["expense"] = {k: float(v) for k, v in expense_values.items()}
                 save_json_dict(DATA_FILE, data)
                 st.success("✅ Expense budgets saved.")
-                time.sleep(0.5)
                 st.rerun()
 
     with revenue_tab:
@@ -2100,7 +2481,6 @@ def render_budget_editor(data: dict, month_key: str, owner: str) -> None:
                 data["budgets"][month_key][owner]["revenue"] = {k: float(v) for k, v in revenue_values.items()}
                 save_json_dict(DATA_FILE, data)
                 st.success("✅ Revenue budgets saved.")
-                time.sleep(0.5)
                 st.rerun()
 
     with savings_tab:
@@ -2121,7 +2501,6 @@ def render_budget_editor(data: dict, month_key: str, owner: str) -> None:
                 data["budgets"][month_key][owner]["savings"] = {k: float(v) for k, v in savings_values.items()}
                 save_json_dict(DATA_FILE, data)
                 st.success("✅ Savings budgets saved.")
-                time.sleep(0.5)
                 st.rerun()
 
 
@@ -2532,6 +2911,145 @@ def show_analytics(data: dict) -> None:
                 )
 
                 plot_monthly_budget_trend(month_keys, monthly_actual, monthly_budget)
+    
+    st.divider()
+    st.markdown("### 🎯 Savings Goals (Track your progress)")
+    show_savings_goals(data)
+
+
+def show_savings_goals_page(data: dict) -> None:
+    """Display savings goals management page."""
+    st.markdown("""
+        <div style="padding: 2rem 0 1rem 0;">
+            <h1 style="margin: 0; color: #2c3e50;">🎯 Savings Goals</h1>
+            <p style="margin: 0.5rem 0 0 0; color: #7f8c8d; font-size: 1rem;">Track your long-term savings objectives</p>
+        </div>
+    """, unsafe_allow_html=True)
+    st.caption("Set and monitor your savings goals to stay motivated and on track.")
+    st.divider()
+    
+    show_savings_goals(data)
+
+
+def show_settings_page(data: dict) -> None:
+    """Display settings and customization page."""
+    st.markdown("""
+        <div style="padding: 2rem 0 1rem 0;">
+            <h1 style="margin: 0; color: #2c3e50;">⚙️ Settings</h1>
+            <p style="margin: 0.5rem 0 0 0; color: #7f8c8d; font-size: 1rem;">Customize your tracker experience</p>
+        </div>
+    """, unsafe_allow_html=True)
+    st.divider()
+    
+    st.markdown("### 📚 Custom Categories")
+    st.caption("Add your own categories for expenses, revenue, and savings.")
+    
+    if "custom_categories" not in data:
+        data["custom_categories"] = {"expense": [], "revenue": [], "savings": []}
+    
+    # Tabs for each category type
+    expense_tab, revenue_tab, savings_tab = st.tabs(["💸 Expenses", "📈 Revenue", "🎯 Savings"])
+    
+    with expense_tab:
+        st.markdown("**Custom Expense Categories**")
+        custom_expenses = data["custom_categories"].get("expense", [])
+        
+        # Display existing custom categories
+        if custom_expenses:
+            st.markdown("**Your Custom Categories:**")
+            for i, cat in enumerate(custom_expenses):
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    st.write(f"• {cat}")
+                with col2:
+                    if st.button("🗑️", key=f"delete_exp_{i}", help="Delete"):
+                        data["custom_categories"]["expense"].remove(cat)
+                        save_json_dict(DATA_FILE, data)
+                        st.rerun()
+        else:
+            st.info("No custom expense categories yet.")
+        
+        # Add new category
+        new_cat = st.text_input("Add new expense category", key="new_expense_cat", placeholder="e.g., Pet Care")
+        if st.button("Add Expense Category", key="add_expense_cat_btn"):
+            if new_cat and new_cat not in custom_expenses:
+                data["custom_categories"]["expense"].append(new_cat)
+                save_json_dict(DATA_FILE, data)
+                st.success(f"✅ Added '{new_cat}' to expense categories")
+                st.rerun()
+    
+    with revenue_tab:
+        st.markdown("**Custom Revenue Categories**")
+        custom_revenue = data["custom_categories"].get("revenue", [])
+        
+        # Display existing custom categories
+        if custom_revenue:
+            st.markdown("**Your Custom Categories:**")
+            for i, cat in enumerate(custom_revenue):
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    st.write(f"• {cat}")
+                with col2:
+                    if st.button("🗑️", key=f"delete_rev_{i}", help="Delete"):
+                        data["custom_categories"]["revenue"].remove(cat)
+                        save_json_dict(DATA_FILE, data)
+                        st.rerun()
+        else:
+            st.info("No custom revenue categories yet.")
+        
+        # Add new category
+        new_cat = st.text_input("Add new revenue category", key="new_revenue_cat", placeholder="e.g., Freelance Work")
+        if st.button("Add Revenue Category", key="add_revenue_cat_btn"):
+            if new_cat and new_cat not in custom_revenue:
+                data["custom_categories"]["revenue"].append(new_cat)
+                save_json_dict(DATA_FILE, data)
+                st.success(f"✅ Added '{new_cat}' to revenue categories")
+                st.rerun()
+    
+    with savings_tab:
+        st.markdown("**Custom Savings Categories**")
+        custom_savings = data["custom_categories"].get("savings", [])
+        
+        # Display existing custom categories
+        if custom_savings:
+            st.markdown("**Your Custom Categories:**")
+            for i, cat in enumerate(custom_savings):
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    st.write(f"• {cat}")
+                with col2:
+                    if st.button("🗑️", key=f"delete_sav_{i}", help="Delete"):
+                        data["custom_categories"]["savings"].remove(cat)
+                        save_json_dict(DATA_FILE, data)
+                        st.rerun()
+        else:
+            st.info("No custom savings categories yet.")
+        
+        # Add new category
+        new_cat = st.text_input("Add new savings category", key="new_savings_cat", placeholder="e.g., Vacation Fund")
+        if st.button("Add Savings Category", key="add_savings_cat_btn"):
+            if new_cat and new_cat not in custom_savings:
+                data["custom_categories"]["savings"].append(new_cat)
+                save_json_dict(DATA_FILE, data)
+                st.success(f"✅ Added '{new_cat}' to savings categories")
+                st.rerun()
+    
+    st.divider()
+    st.markdown("### 💾 Backup & Export")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📥 Download Full Backup", key="download_backup_btn"):
+            backup_data = json.dumps(data, indent=2, default=str)
+            st.download_button(
+                label="Download Backup JSON",
+                data=backup_data.encode("utf-8"),
+                file_name=f"budget_tracker_backup_{date.today().isoformat()}.json",
+                mime="application/json",
+                key="download_backup_file"
+            )
+    
+    with col2:
+        st.caption("💡 Tip: Save your data regularly for safekeeping.")
 
 
 # -----------------------------
@@ -2558,6 +3076,10 @@ def main() -> None:
         show_budget_page(data)
     elif st.session_state["page"] == "analytics":
         show_analytics(data)
+    elif st.session_state["page"] == "goals":
+        show_savings_goals_page(data)
+    elif st.session_state["page"] == "settings":
+        show_settings_page(data)
     else:
         st.session_state["page"] = "dashboard"
         st.rerun()
