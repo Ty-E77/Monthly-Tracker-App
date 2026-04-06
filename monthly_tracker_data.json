@@ -107,7 +107,7 @@
                     "Gas": 160.0,
                     "Other": 50.0,
                     "Health": 100.0,
-                    "Travel": 0.0,
+                    "Travel": 50.0,
                     "Shopping": 20.0,
                     "Groceries": 100.0,
                     "Eating Out": 200.0,
@@ -1499,7 +1499,6 @@
         {
             "id": "55be5f54-4dc8-466b-a262-bcdb7db271b2",
             "date": "2026-03-31",
-            "tags": "",
             "owner": "lexi",
             "amount": 401.32,
             "category": "Paycheck",
@@ -1515,7 +1514,6 @@
         {
             "id": "c893099d-83ff-4ca5-a048-d365016a63b1",
             "date": "2026-03-31",
-            "tags": "",
             "owner": "lexi",
             "amount": 3.45,
             "category": "Eating Out",
@@ -1531,7 +1529,6 @@
         {
             "id": "3187f824-fcfa-4790-b8c1-09f70ed57172",
             "date": "2026-04-01",
-            "tags": "",
             "owner": "lexi",
             "amount": 81.98,
             "category": "Shopping",
@@ -1547,7 +1544,6 @@
         {
             "id": "b3f6ea38-c18a-4e3d-8889-afa440d073d4",
             "date": "2026-04-01",
-            "tags": "",
             "owner": "lexi",
             "amount": 2.46,
             "category": "Other",
@@ -1563,7 +1559,6 @@
         {
             "id": "b408d1c8-d356-42ff-af03-8755733bd25c",
             "date": "2026-04-02",
-            "tags": "",
             "owner": "lexi",
             "amount": 4.99,
             "category": "Eating Out",
@@ -1579,7 +1574,6 @@
         {
             "id": "ae0e97f8-24d0-4363-942d-3a1d9776d977",
             "date": "2026-04-02",
-            "tags": "",
             "owner": "lexi",
             "amount": 28.45,
             "category": "Health",
@@ -1595,7 +1589,6 @@
         {
             "id": "74a748f8-33f9-4ece-a459-7ccfd5fc19fa",
             "date": "2026-04-02",
-            "tags": "",
             "owner": "lexi",
             "amount": 1.0,
             "category": "Eating Out",
@@ -1611,7 +1604,6 @@
         {
             "id": "2210b694-a10b-450c-944e-2c63c375a43c",
             "date": "2026-04-02",
-            "tags": "",
             "owner": "lexi",
             "amount": 250.0,
             "category": "Savings Transfer",
@@ -1627,7 +1619,6 @@
         {
             "id": "1208e279-b6a8-4c98-b41a-649d951eec3a",
             "date": "2026-04-03",
-            "tags": "",
             "owner": "lexi",
             "amount": 9.98,
             "category": "Eating Out",
@@ -1643,7 +1634,6 @@
         {
             "id": "de4a3d02-c2bf-4320-a6ee-a1cdaf629683",
             "date": "2026-04-03",
-            "tags": "",
             "owner": "lexi",
             "amount": 100.98,
             "category": "Shopping",
@@ -1659,7 +1649,6 @@
         {
             "id": "68fb4115-8e52-4175-b4e1-c4e7fc480960",
             "date": "2026-04-03",
-            "tags": "",
             "owner": "lexi",
             "amount": 4.99,
             "category": "Shopping",
@@ -1675,7 +1664,6 @@
         {
             "id": "c8485444-3955-4292-926b-df7a1327e706",
             "date": "2026-04-03",
-            "tags": "",
             "owner": "lexi",
             "amount": 15.0,
             "category": "Other",
@@ -1691,7 +1679,6 @@
         {
             "id": "81b9f1a7-266e-4252-96dd-c1b42c57a3ce",
             "date": "2026-04-04",
-            "tags": "",
             "owner": "lexi",
             "amount": 6.48,
             "category": "Groceries",
@@ -1701,6 +1688,51 @@
             "entry_type": "expense",
             "updated_at": "",
             "description": "Trader Joe's",
+            "recurrence_count": 1,
+            "recurrence_frequency": "None"
+        },
+        {
+            "id": "14164740-7c05-47a6-b5a2-10f275badc6a",
+            "date": "2026-04-01",
+            "owner": "lexi",
+            "amount": 588.92,
+            "category": "Carryover Balance",
+            "month_key": "2026-04",
+            "created_at": "2026-04-06T21:37:03",
+            "created_by": "none",
+            "entry_type": "revenue",
+            "updated_at": "",
+            "description": "Carryover from March 2026",
+            "recurrence_count": 1,
+            "recurrence_frequency": "None"
+        },
+        {
+            "id": "bf1440ea-8330-4c97-bf8a-76a1f29162a0",
+            "date": "2026-05-01",
+            "owner": "lexi",
+            "amount": 82.61,
+            "category": "Carryover Balance",
+            "month_key": "2026-05",
+            "created_at": "2026-04-06T21:37:03",
+            "created_by": "none",
+            "entry_type": "revenue",
+            "updated_at": "",
+            "description": "Carryover from April 2026",
+            "recurrence_count": 1,
+            "recurrence_frequency": "None"
+        },
+        {
+            "id": "35d3ec1b-de0b-4391-a702-6bc313d1a337",
+            "date": "2026-03-31",
+            "owner": "lexi",
+            "amount": 8527.86,
+            "category": "Savings Deposit",
+            "month_key": "2026-03",
+            "created_at": "2026-04-06T21:46:32",
+            "created_by": "lexi",
+            "entry_type": "savings",
+            "updated_at": "",
+            "description": "Initial Savings",
             "recurrence_count": 1,
             "recurrence_frequency": "None"
         }
