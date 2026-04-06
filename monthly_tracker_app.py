@@ -1,5 +1,4 @@
 import json
-import math
 import uuid
 from copy import deepcopy
 from datetime import date, datetime
@@ -463,32 +462,48 @@ def show_month_selector(data: dict) -> None:
 # Login page
 # -----------------------------
 def show_login_page() -> None:
-    if st.session_state.get("logout_success"):
-        st.success("Logged out successfully.")
-        st.session_state["logout_success"] = False
-
     st.markdown(f"# {APP_TITLE}")
     st.caption("Track shared and personal revenues, expenses, budgets, and monthly trends together.")
     st.divider()
 
-    with st.container(border=True):
-        st.markdown("### Log In")
-        username = st.text_input("Username", placeholder="tyshawn or lexi", key="login_username")
-        password = st.text_input("Password", type="password", key="login_password")
+    left, right = st.columns([1.2, 0.8])
 
-        if st.button("Log In", key="auth_login_btn", type="primary", use_container_width=True):
-            if not username or not password:
-                st.error("Please enter both username and password.")
-                st.stop()
+    with left:
+        with st.container(border=True):
+            st.markdown("### What this app does")
+            st.markdown(
+                """
+                - track **shared and personal** income + expenses
+                - manage **joint and separate monthly budgets**
+                - use **Quick Add** for on-the-go entries
+                - switch between **previous months**
+                - review **analytics and trends**
+                """
+            )
 
-            if validate_credentials(username, password):
-                st.session_state["logged_in"] = True
-                st.session_state["current_user"] = username.strip().lower()
-                st.session_state["page"] = "dashboard"
-                st.session_state["login_success"] = True
-                st.rerun()
-            else:
-                st.error("Invalid login. Use the usernames/passwords you gave me.")
+    with right:
+        with st.container(border=True):
+            st.markdown("### Log In")
+            username = st.text_input("Username", placeholder="tyshawn or lexi", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
+
+            if st.button("Log In", key="auth_login_btn", type="primary", use_container_width=True):
+                if not username or not password:
+                    st.error("Please enter both username and password.")
+                    st.stop()
+
+                if validate_credentials(username, password):
+                    st.session_state["logged_in"] = True
+                    st.session_state["current_user"] = username.strip().lower()
+                    st.session_state["page"] = "dashboard"
+                    st.rerun()
+                else:
+                    st.error("Invalid login. Use the usernames/passwords you gave me.")
+
+        with st.container(border=True):
+            st.markdown("### Login Info")
+            st.markdown("**TyShawn login** → username: `tyshawn`, password: `lexi`")
+            st.markdown("**Lexi login** → username: `lexi`, password: `tyshawn`")
 
 
 # -----------------------------
@@ -523,7 +538,6 @@ def show_sidebar(data: dict) -> None:
             st.session_state["logged_in"] = False
             st.session_state["current_user"] = None
             st.session_state["page"] = "dashboard"
-            st.session_state["logout_success"] = True
             st.rerun()
 
 
@@ -531,10 +545,6 @@ def show_sidebar(data: dict) -> None:
 # Dashboard
 # -----------------------------
 def show_dashboard(data: dict) -> None:
-    if st.session_state.get("login_success"):
-        st.success("Logged in successfully.")
-        st.session_state["login_success"] = False
-
     month_key = st.session_state["selected_month"]
     df = transaction_dataframe(data, month_key)
 
@@ -598,62 +608,62 @@ def show_dashboard(data: dict) -> None:
 # Quick Add page
 # -----------------------------
 def render_entry_form(data: dict, month_key: str, form_prefix: str) -> None:
-    with st.form(key=f"{form_prefix}_form"):
-        selected_date = st.date_input(
-            "Date",
-            value=date.today() if month_key == month_key_from_date(date.today()) else datetime.strptime(month_key + "-01", "%Y-%m-%d").date(),
-        )
-        entry_type = st.selectbox(
-            "Entry Type",
-            options=["expense", "revenue"],
-            format_func=lambda value: ENTRY_TYPE_LABELS[value],
-        )
-        owner = st.selectbox(
-            "Who does this belong to?",
-            options=OWNERS,
-            format_func=lambda value: OWNER_LABELS[value],
-        )
+    selected_date = st.date_input(
+        "Date",
+        value=date.today() if month_key == month_key_from_date(date.today()) else datetime.strptime(month_key + "-01", "%Y-%m-%d").date(),
+        key=f"{form_prefix}_date",
+    )
+    entry_type = st.selectbox(
+        "Entry Type",
+        options=["expense", "revenue"],
+        format_func=lambda value: ENTRY_TYPE_LABELS[value],
+        key=f"{form_prefix}_type",
+    )
+    owner = st.selectbox(
+        "Who does this belong to?",
+        options=OWNERS,
+        format_func=lambda value: OWNER_LABELS[value],
+        key=f"{form_prefix}_owner",
+    )
 
-        categories = EXPENSE_CATEGORIES if entry_type == "expense" else REVENUE_CATEGORIES
-        category = st.selectbox(
-            "Category",
-            options=categories,
-        )
-        amount = st.number_input(
-            "Amount",
-            min_value=0.0,
-            step=1.0,
-            format="%.2f",
-        )
-        description = st.text_input(
-            "Description",
-            placeholder="Required note",
-        )
+    categories = EXPENSE_CATEGORIES if entry_type == "expense" else REVENUE_CATEGORIES
+    category = st.selectbox(
+        "Category",
+        options=categories,
+        key=f"{form_prefix}_category",
+    )
+    amount = st.number_input(
+        "Amount",
+        min_value=0.0,
+        step=1.0,
+        format="%.2f",
+        key=f"{form_prefix}_amount",
+    )
+    description = st.text_input(
+        "Description",
+        placeholder="Optional note",
+        key=f"{form_prefix}_description",
+    )
 
-        submitted = st.form_submit_button("Add Entry", type="primary", use_container_width=True)
-        if submitted:
-            if amount <= 0:
-                st.error("Amount must be greater than zero.")
-                st.stop()
-            if not description.strip():
-                st.error("Description is required.")
-                st.stop()
+    if st.button("Add Entry", key=f"{form_prefix}_submit_btn", type="primary", use_container_width=True):
+        if amount <= 0:
+            st.error("Amount must be greater than zero.")
+            st.stop()
 
-            add_transaction(
-                data=data,
-                month_key=month_key,
-                entry_date=selected_date,
-                entry_type=entry_type,
-                owner=owner,
-                category=category,
-                amount=amount,
-                description=description,
-                created_by=current_username(),
-            )
-            save_json_dict(DATA_FILE, data)
-            st.success("Entry added successfully.")
-            st.session_state["page"] = "tracker"
-            st.rerun()
+        add_transaction(
+            data=data,
+            month_key=month_key,
+            entry_date=selected_date,
+            entry_type=entry_type,
+            owner=owner,
+            category=category,
+            amount=amount,
+            description=description,
+            created_by=current_username(),
+        )
+        save_json_dict(DATA_FILE, data)
+        st.success("Entry added successfully.")
+        st.rerun()
 
 
 def show_quick_add(data: dict) -> None:
@@ -692,10 +702,10 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
             with right:
                 can_edit = can_edit_transaction(transaction)
                 if can_edit:
-                    if st.button("Edit", key=f"edit_txn_btn_{section_title}_{row['id']}", use_container_width=True):
+                    if st.button("Edit", key=f"edit_txn_btn_{row['id']}", use_container_width=True):
                         st.session_state["editing_transaction_id"] = row["id"]
                         st.rerun()
-                    if st.button("Delete", key=f"delete_txn_btn_{section_title}_{row['id']}", use_container_width=True):
+                    if st.button("Delete", key=f"delete_txn_btn_{row['id']}", use_container_width=True):
                         data["transactions"] = [item for item in data["transactions"] if item["id"] != row["id"]]
                         save_json_dict(DATA_FILE, data)
                         st.success("Entry deleted.")
@@ -946,7 +956,7 @@ def plot_bar_chart(series: pd.Series, title: str, x_label: str = "", y_label: st
         st.info("Not enough data to build this chart yet.")
         return
 
-    fig, ax = plt.subplots(figsize=(6, 3.5))
+    fig, ax = plt.subplots(figsize=(8, 4.5))
     series.plot(kind="bar", ax=ax)
     ax.set_title(title)
     ax.set_xlabel(x_label)
