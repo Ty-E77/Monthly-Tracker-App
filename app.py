@@ -235,6 +235,16 @@ hr {
     color: white;
 }
 
+/* App-like mode: hide Streamlit chrome */
+header[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stStatusWidget"],
+[data-testid="stDecoration"],
+#MainMenu,
+footer {
+    display: none !important;
+}
+
 /* ---------------------------------
    Responsive layout by device size
    --------------------------------- */
@@ -1915,11 +1925,10 @@ def show_tracker(data: dict) -> None:
 
     st.divider()
     
-    tab_all, tab_ty, tab_lexi, tab_shared = st.tabs([
+    tab_all, tab_ty, tab_lexi = st.tabs([
         "📋 All Entries",
         "👤 TyShawn",
         "👤 Lexi",
-        "🤝 Shared",
     ])
 
     with tab_all:
@@ -1939,12 +1948,6 @@ def show_tracker(data: dict) -> None:
             st.info("📭 No entries found for Lexi. Try adjusting your filters.")
         else:
             editable_transaction_table(data, lexi_filtered, "Lexi Entries")
-    with tab_shared:
-        shared_filtered = owner_filtered_df(filtered_df, "shared")
-        if shared_filtered.empty:
-            st.info("📭 No shared entries found. Try adjusting your filters.")
-        else:
-            editable_transaction_table(data, shared_filtered, "Shared Entries")
 
 
 # -----------------------------
