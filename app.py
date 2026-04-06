@@ -43,6 +43,7 @@ OWNER_LABELS = {
 ENTRY_TYPE_LABELS = {
     "expense": "Expense",
     "revenue": "Revenue",
+    "savings": "Savings",
 }
 EXPENSE_CATEGORIES = [
     "Rent + Utilities",
@@ -67,7 +68,11 @@ REVENUE_CATEGORIES = [
     "Cash Gift",
     "Refund",
     "Bonus",
+    "Savings Transfer",
     "Other",
+]
+SAVINGS_CATEGORIES = [
+    "Savings Deposit",
 ]
 ALL_MONTHS = [
     "January",
@@ -227,7 +232,7 @@ def normalize_transaction(record: dict) -> dict | None:
         "updated_at": str(record.get("updated_at", "")),
     }
 
-    if normalized["entry_type"] not in ["expense", "revenue"]:
+    if normalized["entry_type"] not in ["expense", "revenue", "savings"]:
         return None
     if normalized["owner"] not in OWNERS:
         return None
@@ -382,13 +387,25 @@ def monthly_summary(df: pd.DataFrame) -> dict:
         return {
             "revenue": 0.0,
             "expense": 0.0,
+            "savings": 0.0,
             "net": 0.0,
         }
-    revenue = float(df.loc[df["entry_type"] == "revenue", "amount"].sum())
-    expense = float(df.loc[df["entry_type"] == "expense", "amount"].sum())
+
+    revenue_df = df[df["entry_type"] == "revenue"]
+    expense_df = df[df["entry_type"] == "expense"]
+    savings_df = df[df["entry_type"] == "savings"]
+
+    savings_transfer_out = float(expense_df.loc[expense_df["category"] == "Savings Transfer", "amount"].sum())
+    savings_transfer_in = float(revenue_df.loc[revenue_df["category"] == "Savings Transfer", "amount"].sum())
+
+    revenue = float(revenue_df["amount"].sum()) - savings_transfer_out
+    expense = float(expense_df.loc[expense_df["category"] != "Savings Transfer", "amount"].sum())
+    savings = float(savings_df["amount"].sum()) + savings_transfer_out - savings_transfer_in
+
     return {
         "revenue": revenue,
         "expense": expense,
+        "savings": savings,
         "net": revenue - expense,
     }
 
@@ -554,9 +571,17 @@ def show_dashboard(data: dict) -> None:
     with col2:
         metric_card("Expenses", format_currency(overall["expense"]), "All entries this month")
     with col3:
-        metric_card("Net", format_currency(overall["net"]), "Revenue minus expenses")
+        metric_card("Savings", format_currency(overall["savings"]), "Tracked savings this month")
     with col4:
+        metric_card("Net", format_currency(overall["net"]), "Revenue minus expenses")
+
+    st.divider()
+
+    budget_col1, budget_col2 = st.columns(2)
+    with budget_col1:
         metric_card("Budgeted Expenses", format_currency(budget_totals["expense_budget"]), "Shared + personal budgets")
+    with budget_col2:
+        metric_card("Budgeted Revenue", format_currency(budget_totals["revenue_budget"]), "Shared + personal budgets")
 
     st.divider()
 
@@ -605,7 +630,7 @@ def render_entry_form(data: dict, month_key: str, form_prefix: str) -> None:
         )
         entry_type = st.selectbox(
             "Entry Type",
-            options=["expense", "revenue"],
+            options=["expense", "revenue", "savings"],
             format_func=lambda value: ENTRY_TYPE_LABELS[value],
         )
         owner = st.selectbox(
@@ -614,7 +639,12 @@ def render_entry_form(data: dict, month_key: str, form_prefix: str) -> None:
             format_func=lambda value: OWNER_LABELS[value],
         )
 
-        categories = EXPENSE_CATEGORIES if entry_type == "expense" else REVENUE_CATEGORIES
+        if entry_type == "expense":
+            categories = EXPENSE_CATEGORIES
+        elif entry_type == "revenue":
+            categories = REVENUE_CATEGORIES
+        else:
+            categories = SAVINGS_CATEGORIES
         category = st.selectbox(
             "Category",
             options=categories,
@@ -711,24 +741,29 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
                     st.markdown("#### Update Entry")
                     entry_type = st.selectbox(
                         "Entry Type",
-                        ["expense", "revenue"],
-                        index=["expense", "revenue"].index(transaction["entry_type"]),
+                        ["expense", "revenue", "savings"],
+                        index=["expense", "revenue", "savings"].index(transaction["entry_type"]),
                         format_func=lambda value: ENTRY_TYPE_LABELS[value],
-                        key=f"edit_type_{row['id']}",
+                        key=f"edit_type_{section_title}_{row['id']}",
                     )
                     owner = st.selectbox(
                         "Owner",
                         OWNERS,
                         index=OWNERS.index(transaction["owner"]),
                         format_func=lambda value: OWNER_LABELS[value],
-                        key=f"edit_owner_{row['id']}",
+                        key=f"edit_owner_{section_title}_{row['id']}",
                     )
-                    categories = EXPENSE_CATEGORIES if entry_type == "expense" else REVENUE_CATEGORIES
+                    if entry_type == "expense":
+                        categories = EXPENSE_CATEGORIES
+                    elif entry_type == "revenue":
+                        categories = REVENUE_CATEGORIES
+                    else:
+                        categories = SAVINGS_CATEGORIES
                     category = st.selectbox(
                         "Category",
                         categories,
                         index=categories.index(transaction["category"]) if transaction["category"] in categories else 0,
-                        key=f"edit_category_{row['id']}",
+                        key=f"edit_category_{section_title}_{row['id']}",
                     )
                     amount = st.number_input(
                         "Amount",
@@ -736,21 +771,21 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
                         value=float(transaction["amount"]),
                         step=1.0,
                         format="%.2f",
-                        key=f"edit_amount_{row['id']}",
+                        key=f"edit_amount_{section_title}_{row['id']}",
                     )
                     entry_date = st.date_input(
                         "Date",
                         value=datetime.strptime(transaction["date"], "%Y-%m-%d").date(),
-                        key=f"edit_date_{row['id']}",
+                        key=f"edit_date_{section_title}_{row['id']}",
                     )
                     description = st.text_input(
                         "Description",
                         value=transaction.get("description", ""),
-                        key=f"edit_desc_{row['id']}",
+                        key=f"edit_desc_{section_title}_{row['id']}",
                     )
                     col_a, col_b = st.columns(2)
                     with col_a:
-                        if st.button("Save Changes", key=f"save_txn_btn_{row['id']}", type="primary", use_container_width=True):
+                        if st.button("Save Changes", key=f"save_txn_btn_{section_title}_{row['id']}", type="primary", use_container_width=True):
                             if amount <= 0:
                                 st.error("Amount must be greater than zero.")
                                 st.stop()
@@ -767,7 +802,7 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
                             st.success("Entry updated.")
                             st.rerun()
                     with col_b:
-                        if st.button("Cancel", key=f"cancel_txn_btn_{row['id']}", use_container_width=True):
+                        if st.button("Cancel", key=f"cancel_txn_btn_{section_title}_{row['id']}", use_container_width=True):
                             st.session_state["editing_transaction_id"] = None
                             st.rerun()
 
@@ -781,12 +816,14 @@ def show_tracker(data: dict) -> None:
     st.divider()
 
     overall = monthly_summary(df)
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         metric_card("Total Revenue", format_currency(overall["revenue"]))
     with col2:
         metric_card("Total Expenses", format_currency(overall["expense"]))
     with col3:
+        metric_card("Total Savings", format_currency(overall["savings"]))
+    with col4:
         metric_card("Left Over", format_currency(overall["net"]))
 
     st.divider()
