@@ -11,6 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 # -----------------------------
@@ -333,6 +334,80 @@ button[aria-label*="Streamlit" i] {
 """
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+def hide_streamlit_floating_ui() -> None:
+    components.html(
+        """
+        <script>
+        const hideFloatingUi = () => {
+            const targetDoc = window.parent?.document || document;
+            const targetWindow = window.parent || window;
+            const selectors = [
+                '[data-testid="stAppToolbar"]',
+                '[data-testid="stToolbarActions"]',
+                '[data-testid="stStatusWidget"]',
+                '[data-testid="stToastContainer"]',
+                '[data-testid="stProfileButton"]',
+                '[data-testid="stProfileContainer"]',
+                'a[title*="Streamlit" i]',
+                'a[aria-label*="Streamlit" i]',
+                'button[title*="Streamlit" i]',
+                'button[aria-label*="Streamlit" i]',
+                'button[title*="Profile" i]',
+                'button[aria-label*="Profile" i]',
+                'img[alt*="profile" i]',
+                'img[alt*="avatar" i]',
+                'iframe[src*="streamlit" i]'
+            ];
+
+            selectors.forEach((selector) => {
+                targetDoc.querySelectorAll(selector).forEach((element) => {
+                    element.style.display = 'none';
+                    element.style.visibility = 'hidden';
+                    element.style.pointerEvents = 'none';
+                });
+            });
+
+            targetDoc.querySelectorAll('a, button, div, img, iframe').forEach((element) => {
+                const text = [
+                    element.getAttribute('title') || '',
+                    element.getAttribute('aria-label') || '',
+                    element.getAttribute('alt') || '',
+                    element.getAttribute('src') || '',
+                    element.getAttribute('href') || '',
+                    element.textContent || ''
+                ].join(' ');
+
+                const rect = element.getBoundingClientRect();
+                const nearBottomRight = (
+                    rect.width > 0 && rect.height > 0 &&
+                    rect.right >= targetWindow.innerWidth - 40 &&
+                    rect.bottom >= targetWindow.innerHeight - 40 &&
+                    rect.width <= 260 &&
+                    rect.height <= 140
+                );
+
+                if (nearBottomRight && /streamlit|profile|avatar/i.test(text)) {
+                    element.style.display = 'none';
+                    element.style.visibility = 'hidden';
+                    element.style.pointerEvents = 'none';
+                }
+            });
+        };
+
+        hideFloatingUi();
+        setTimeout(hideFloatingUi, 500);
+        setTimeout(hideFloatingUi, 1500);
+        setInterval(hideFloatingUi, 3000);
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+hide_streamlit_floating_ui()
 
 
 # -----------------------------
