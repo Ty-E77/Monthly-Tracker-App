@@ -253,6 +253,16 @@ header img[alt*="avatar" i] {
     display: none !important;
 }
 
+/* Hide bottom-right Streamlit floating controls/badges */
+[data-testid="stToastContainer"],
+[data-testid="stException"],
+a[title*="Streamlit" i],
+a[aria-label*="Streamlit" i],
+button[title*="Streamlit" i],
+button[aria-label*="Streamlit" i] {
+    display: none !important;
+}
+
 /* Keep sidebar reopen control visible */
 [data-testid="collapsedControl"] {
     display: flex !important;
