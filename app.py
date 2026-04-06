@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+from supabase import create_client, Client
 
 
 # -----------------------------
@@ -795,7 +796,45 @@ def default_data_store():
     }
 
 
+@st.cache_resource
+def get_supabase_client() -> Client | None:
+    """Return a cached Supabase client if credentials are configured, else None."""
+    try:
+        url = st.secrets["supabase"]["url"]
+        key = st.secrets["supabase"]["key"]
+        if not url or not key or "YOUR_PROJECT_ID" in url:
+            return None
+        return create_client(url, key)
+    except Exception:
+        return None
+
+
 def load_json_dict(file_path: Path) -> dict:
+    # ── Try Supabase first ──────────────────────────────────────
+    client = get_supabase_client()
+    if client:
+        try:
+            response = (
+                client.table("tracker_data")
+                .select("payload")
+                .eq("id", 1)
+                .maybe_single()
+                .execute()
+            )
+            raw = response.data
+            if raw and isinstance(raw.get("payload"), dict):
+                data = raw["payload"]
+                data.setdefault("budgets", {})
+                data.setdefault("transactions", [])
+                if not isinstance(data["budgets"], dict):
+                    data["budgets"] = {}
+                if not isinstance(data["transactions"], list):
+                    data["transactions"] = []
+                return data
+        except Exception:
+            pass  # fall through to local file
+
+    # ── Fallback: local JSON file ───────────────────────────────
     if not file_path.exists():
         return default_data_store()
 
@@ -820,9 +859,19 @@ def load_json_dict(file_path: Path) -> dict:
 
 
 def save_json_dict(file_path: Path, data: dict) -> None:
+    # ── Try Supabase first ──────────────────────────────────────
+    client = get_supabase_client()
+    if client:
+        try:
+            client.table("tracker_data").upsert({"id": 1, "payload": data}).execute()
+            return  # success — no need to write locally
+        except Exception:
+            pass  # fall through to local file
+
+    # ── Fallback: local JSON file ───────────────────────────────
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=4)
-    
+
     # Auto-backup: create timestamped backup
     backup_dir = file_path.parent / ".backups"
     backup_dir.mkdir(exist_ok=True)

@@ -7,3 +7,5 @@ __pycache__/
 STEPS.md
 setup_script.py
 setup_strater.py
+.streamlit/secrets.toml
+.backups/
