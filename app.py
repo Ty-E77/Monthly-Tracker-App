@@ -520,6 +520,237 @@ def get_all_tags(data: dict) -> list[str]:
     return sorted(list(all_tags))
 
 
+def get_transaction_templates(data: dict) -> dict:
+    """Get saved transaction templates."""
+    if "templates" not in data:
+        data["templates"] = {}
+    return data.get("templates", {})
+
+
+def save_transaction_template(data: dict, template_name: str, template_data: dict) -> None:
+    """Save a transaction as a template for quick reuse."""
+    if "templates" not in data:
+        data["templates"] = {}
+    data["templates"][template_name] = template_data
+    save_json_dict(DATA_FILE, data)
+
+
+def get_data_integrity_issues(data: dict, month_key: str) -> dict:
+    """Check for data integrity issues like unset budgets, unusual amounts, etc."""
+    issues = {
+        "budget_not_set": [],
+        "missing_descriptions": [],
+        "unusual_amounts": [],
+        "no_transactions": False
+    }
+    
+    df = transaction_dataframe(data, month_key)
+    
+    # Check if budgets are set
+    budget_record = data.get("budgets", {}).get(month_key)
+    if budget_record:
+        for owner in OWNERS:
+            owner_budget = budget_record.get(owner, empty_budget_block())
+            if not any(owner_budget.get("expense", {}).values()):
+                issues["budget_not_set"].append(owner)
+    
+    # Check for transactions without descriptions
+    for _, row in df.iterrows():
+        if not row.get("description", "").strip():
+            issues["missing_descriptions"].append(row["id"])
+    
+    # Check for unusual amounts (outliers > 3x the median)
+    if not df.empty:
+        expenses = df[df["entry_type"] == "expense"]
+        if not expenses.empty:
+            median = expenses["amount"].median()
+            for _, row in expenses.iterrows():
+                if median > 0 and row["amount"] > median * 3:
+                    issues["unusual_amounts"].append({
+                        "amount": row["amount"],
+                        "category": row["category"],
+                        "median": median
+                    })
+    
+    if df.empty:
+        issues["no_transactions"] = True
+    
+    return issues
+
+
+def show_category_growth_alerts(data: dict, month_key: str) -> None:
+    """Flag categories where spending increased 20%+ vs previous month."""
+    prev_month = previous_month_key(month_key)
+    
+    curr_df = transaction_dataframe(data, month_key)
+    prev_df = transaction_dataframe(data, prev_month) if prev_month in data.get("budgets", {}) else pd.DataFrame()
+    
+    if curr_df.empty or prev_df.empty:
+        return
+    
+    curr_expenses = curr_df[curr_df["entry_type"] == "expense"].groupby("category")["amount"].sum()
+    prev_expenses = prev_df[prev_df["entry_type"] == "expense"].groupby("category")["amount"].sum()
+    
+    alerts = []
+    for cat in curr_expenses.index:
+        prev_val = float(prev_expenses.get(cat, 0))
+        curr_val = float(curr_expenses.get(cat, 0))
+        
+        if prev_val > 0:
+            pct_change = ((curr_val - prev_val) / prev_val) * 100
+            if pct_change >= 20:
+                alerts.append({
+                    'category': cat,
+                    'current': curr_val,
+                    'previous': prev_val,
+                    'pct_change': pct_change
+                })
+    
+    if alerts:
+        st.warning("🚨 **Category Growth Alerts**")
+        for alert in alerts:
+            st.write(f"⬆️ **{alert['category']}**: {alert['pct_change']:.1f}% increase "
+                    f"({format_currency(alert['previous'])} → {format_currency(alert['current'])})")
+
+
+def show_cash_flow_forecast(data: dict, month_key: str) -> None:
+    """Project cash balance 3 months ahead based on recurring transactions."""
+    year, month = map(int, month_key.split("-"))
+    
+    # Get current month summary
+    curr_df = transaction_dataframe(data, month_key)
+    curr_summary = monthly_summary(curr_df)
+    
+    # Find recurring transactions
+    recurring = [txn for txn in data.get("transactions", []) 
+                if txn.get("recurrence_frequency") == "Monthly"]
+    
+    if not recurring:
+        st.info("No recurring transactions found for forecast.")
+        return
+    
+    # Calculate recurring monthly total
+    recurring_monthly = sum(float(txn.get("amount", 0)) for txn in recurring 
+                           if txn.get("entry_type") == "revenue") - \
+                       sum(float(txn.get("amount", 0)) for txn in recurring 
+                           if txn.get("entry_type") == "expense")
+    
+    # Project 3 months
+    forecast_data = []
+    current_balance = curr_summary["net"]
+    
+    for i in range(3):
+        future_month = month + i
+        if future_month > 12:
+            future_month -= 12
+        
+        projected_balance = current_balance + recurring_monthly
+        forecast_data.append({
+            'month': ALL_MONTHS[future_month - 1],
+            'projected_balance': projected_balance,
+            'monthly_net': recurring_monthly
+        })
+        current_balance = projected_balance
+    
+    # Display forecast
+    st.markdown("**3-Month Cash Flow Forecast**")
+    forecast_df = pd.DataFrame(forecast_data)
+    forecast_df['projected_balance'] = forecast_df['projected_balance'].apply(format_currency)
+    forecast_df['monthly_net'] = forecast_df['monthly_net'].apply(format_currency)
+    forecast_df = forecast_df.rename(columns={
+        'month': 'Month',
+        'projected_balance': 'Projected Balance',
+        'monthly_net': 'Monthly Net (Recurring)'
+    })
+    st.dataframe(forecast_df, use_container_width=True, hide_index=True)
+
+
+def show_spending_by_owner(data: dict, month_key: str) -> None:
+    """Display comparison of spending between TyShawn and Lexi."""
+    df = transaction_dataframe(data, month_key)
+    
+    if df.empty:
+        st.info("No transaction data yet.")
+        return
+    
+    personal_df = df[df["owner"].isin(["tyshawn", "lexi"])]
+    
+    if personal_df.empty:
+        st.info("No personal transactions yet.")
+        return
+    
+    # Create comparison chart
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), facecolor='#1e1e1e')
+    
+    for ax in [ax1, ax2]:
+        ax.set_facecolor('#1e1e1e')
+    
+    # Revenue vs Expense comparison
+    owner_summary = personal_df.groupby("owner").apply(
+        lambda x: {
+            'revenue': float(x[x["entry_type"] == "revenue"]["amount"].sum()),
+            'expense': float(x[x["entry_type"] == "expense"]["amount"].sum()),
+            'savings': float(x[x["entry_type"] == "savings"]["amount"].sum())
+        }
+    )
+    
+    owners = list(owner_summary.index)
+    owner_labels = [OWNER_LABELS[o] for o in owners]
+    
+    x = range(len(owners))
+    width = 0.25
+    
+    revenue_vals = [owner_summary[o]['revenue'] for o in owners]
+    expense_vals = [owner_summary[o]['expense'] for o in owners]
+    savings_vals = [owner_summary[o]['savings'] for o in owners]
+    
+    ax1.bar([i - width for i in x], revenue_vals, width, label='Revenue', color='#2ecc71', edgecolor='white', linewidth=1.5)
+    ax1.bar(x, expense_vals, width, label='Expenses', color='#e74c3c', edgecolor='white', linewidth=1.5)
+    ax1.bar([i + width for i in x], savings_vals, width, label='Savings', color='#3498db', edgecolor='white', linewidth=1.5)
+    
+    ax1.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#e0e0e0')
+    ax1.set_title('Revenue vs Expenses vs Savings', fontsize=12, fontweight='bold', color='#e0e0e0')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(owner_labels, color='#e0e0e0')
+    ax1.legend(fontsize=9, facecolor='#2a2a2a', edgecolor='#555', labelcolor='#e0e0e0')
+    ax1.grid(axis='y', alpha=0.2, linestyle='--')
+    ax1.set_axisbelow(True)
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['left'].set_color('#555')
+    ax1.spines['bottom'].set_color('#555')
+    ax1.tick_params(colors='#e0e0e0')
+    ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}' if x >= 0 else f'-${abs(x):,.0f}'))
+    
+    # Net comparison
+    net_vals = [revenue_vals[i] - expense_vals[i] for i in range(len(owners))]
+    colors = ['#2ecc71' if val > 0 else '#e74c3c' for val in net_vals]
+    bars = ax2.bar(owner_labels, net_vals, color=colors, edgecolor='white', linewidth=2, alpha=0.8)
+    
+    ax2.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#e0e0e0')
+    ax2.set_title('Net Balance Comparison', fontsize=12, fontweight='bold', color='#e0e0e0')
+    ax2.axhline(y=0, color='#999', linestyle='-', linewidth=1)
+    ax2.grid(axis='y', alpha=0.2, linestyle='--')
+    ax2.set_axisbelow(True)
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    ax2.spines['left'].set_color('#555')
+    ax2.spines['bottom'].set_color('#555')
+    ax2.tick_params(colors='#e0e0e0')
+    ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}' if x >= 0 else f'-${abs(x):,.0f}'))
+    
+    # Add value labels
+    for i, bar in enumerate(bars):
+        height = bar.get_height()
+        ax2.text(bar.get_x() + bar.get_width()/2., height,
+                f'${height:.0f}', ha='center', va='bottom' if height > 0 else 'top',
+                fontsize=10, color='#e0e0e0', weight='bold')
+    
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+
 def add_custom_category(data: dict, entry_type: str, category_name: str) -> None:
     """Add a custom category to the data store."""
     if "custom_categories" not in data:
@@ -1560,11 +1791,37 @@ def plot_spending_by_category(df: pd.DataFrame, title: str = "Spending by Catego
     
     spending = expenses.groupby("category")["amount"].sum().sort_values(ascending=False).head(10)
     
-    fig, ax = plt.subplots(figsize=(8, 5), facecolor='white')
-    colors = ['#e74c3c', '#e67e22', '#f39c12', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c', '#34495e', '#c0392b']
-    ax.pie(spending.values, labels=spending.index, autopct='%1.1f%%', colors=colors[:len(spending)], startangle=90)
-    ax.set_title(title, fontsize=12, fontweight='bold')
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor='#1e1e1e')
+    ax.set_facecolor('#1e1e1e')
+    
+    # Enhanced color palette
+    colors = ['#FF6B6B', '#FFA500', '#FFD93D', '#6BCB77', '#4D96FF', '#9D84B7', '#FF85B3', '#FFB84D', '#A8E6CF', '#FFB3BA']
+    
+    wedges, texts, autotexts = ax.pie(
+        spending.values, 
+        labels=spending.index, 
+        autopct='%1.1f%%',
+        colors=colors[:len(spending)],
+        startangle=90,
+        textprops={'fontsize': 10, 'weight': 'bold'},
+        wedgeprops={'edgecolor': 'white', 'linewidth': 2}
+    )
+    
+    # Style percentage text
+    for autotext in autotexts:
+        autotext.set_color('white')
+        autotext.set_fontsize(9)
+        autotext.set_weight('bold')
+    
+    # Style labels
+    for text in texts:
+        text.set_color('#e0e0e0')
+        text.set_fontsize(9)
+        text.set_weight('bold')
+    
+    ax.set_title(title, fontsize=13, fontweight='bold', color='#e0e0e0', pad=20)
     st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
 
 
 def show_spending_velocity(df: pd.DataFrame, month_key: str) -> None:
@@ -1585,12 +1842,161 @@ def show_spending_velocity(df: pd.DataFrame, month_key: str) -> None:
         total_spent = float(expenses["amount"].sum())
         daily_avg = total_spent / days_elapsed
         projected = daily_avg * days_in_month
+        days_remaining = days_in_month - days_elapsed
         
-        col1, col2 = st.columns(2)
+        # Create visual metrics with better styling
+        col1, col2, col3 = st.columns(3)
+        
         with col1:
-            st.metric("Daily Average Spend", format_currency(daily_avg))
+            st.metric(
+                "💰 Daily Average",
+                format_currency(daily_avg),
+                delta=f"{days_remaining} days left",
+                delta_color="off"
+            )
+        
         with col2:
-            st.metric("Projected Month Total", format_currency(projected))
+            st.metric(
+                "📈 Projected Total",
+                format_currency(projected),
+                delta=f"{days_elapsed}/{days_in_month} days",
+                delta_color="off"
+            )
+        
+        with col3:
+            budget_comparison = f"+{format_currency(total_spent)}" if total_spent > 0 else format_currency(total_spent)
+            st.metric(
+                "✓ Current Spending",
+                format_currency(total_spent),
+                delta=f"~{format_currency(daily_avg)}/day",
+                delta_color="off"
+            )
+        
+        # Add a progress bar showing month progress
+        progress = days_elapsed / days_in_month
+        st.progress(progress, text=f"Month {progress*100:.0f}% complete")
+
+
+def show_budget_vs_actual(data: dict, month_key: str, owner: str) -> None:
+    """Display side-by-side comparison of budgeted vs actual spending by category."""
+    df = transaction_dataframe(data, month_key)
+    owner_df = owner_filtered_df(df, owner)
+    
+    if owner_df.empty:
+        st.info("No transaction data yet.")
+        return
+    
+    budget_record = data.get("budgets", {}).get(month_key, {}).get(owner, empty_budget_block())
+    expenses_df = owner_df[owner_df["entry_type"] == "expense"]
+    
+    if expenses_df.empty:
+        st.info("No expense data yet.")
+        return
+    
+    # Get actual spending by category
+    actual_by_cat = expenses_df.groupby("category")["amount"].sum()
+    
+    # Get budgeted amounts
+    budgeted_by_cat = budget_record.get("expense", {})
+    
+    # Merge and prepare for comparison
+    categories = sorted(set(list(actual_by_cat.index) + list(budgeted_by_cat.keys())))
+    actual_vals = [float(actual_by_cat.get(cat, 0)) for cat in categories]
+    budget_vals = [float(budgeted_by_cat.get(cat, 0)) for cat in categories]
+    
+    # Create comparison chart
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor='#1e1e1e')
+    ax.set_facecolor('#1e1e1e')
+    
+    x = range(len(categories))
+    width = 0.35
+    
+    bars1 = ax.bar([i - width/2 for i in x], budget_vals, width, label='Budgeted', color='#3498db', edgecolor='white', linewidth=1.5, alpha=0.8)
+    bars2 = ax.bar([i + width/2 for i in x], actual_vals, width, label='Actual', color='#e74c3c', edgecolor='white', linewidth=1.5, alpha=0.8)
+    
+    # Styling
+    ax.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#e0e0e0')
+    ax.set_title(f'Budget vs Actual Spending - {OWNER_LABELS[owner]}', fontsize=13, fontweight='bold', color='#e0e0e0', pad=15)
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories, rotation=45, ha='right', color='#e0e0e0', fontsize=9)
+    ax.legend(fontsize=10, facecolor='#2a2a2a', edgecolor='#555', labelcolor='#e0e0e0')
+    ax.grid(axis='y', alpha=0.2, linestyle='--', linewidth=0.7)
+    ax.set_axisbelow(True)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}' if x >= 0 else f'-${abs(x):,.0f}'))
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#555')
+    ax.spines['bottom'].set_color('#555')
+    ax.tick_params(colors='#e0e0e0')
+    
+    # Add value labels on bars
+    for bars in [bars1, bars2]:
+        for bar in bars:
+            height = bar.get_height()
+            if height > 0:
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                       f'${height:.0f}',
+                       ha='center', va='bottom', fontsize=8, color='#e0e0e0', weight='bold')
+    
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+
+def show_category_trends(data: dict, month_key: str) -> None:
+    """Show which categories are trending up/down month-over-month."""
+    prev_month = previous_month_key(month_key)
+    
+    curr_df = transaction_dataframe(data, month_key)
+    prev_df = transaction_dataframe(data, prev_month) if prev_month in data.get("budgets", {}) else pd.DataFrame()
+    
+    if curr_df.empty or prev_df.empty:
+        st.info("Not enough data to show trends yet.")
+        return
+    
+    curr_expenses = curr_df[curr_df["entry_type"] == "expense"].groupby("category")["amount"].sum()
+    prev_expenses = prev_df[prev_df["entry_type"] == "expense"].groupby("category")["amount"].sum()
+    
+    # Calculate changes
+    categories = sorted(set(list(curr_expenses.index) + list(prev_expenses.index)))
+    trends = []
+    
+    for cat in categories:
+        curr_val = float(curr_expenses.get(cat, 0))
+        prev_val = float(prev_expenses.get(cat, 0))
+        
+        if prev_val > 0:
+            pct_change = ((curr_val - prev_val) / prev_val) * 100
+            change_amount = curr_val - prev_val
+        else:
+            pct_change = 100 if curr_val > 0 else 0
+            change_amount = curr_val
+        
+        trends.append({
+            'category': cat,
+            'current': curr_val,
+            'previous': prev_val,
+            'change': change_amount,
+            'pct_change': pct_change
+        })
+    
+    # Sort by percentage change descending
+    trends.sort(key=lambda x: x['pct_change'], reverse=True)
+    
+    st.markdown("**Category Spending Trends (Month-over-Month)**")
+    
+    for trend in trends:
+        if trend['previous'] > 0 or trend['current'] > 0:
+            icon = "📈" if trend['pct_change'] > 0 else "📉" if trend['pct_change'] < 0 else "➡️"
+            color = "#e74c3c" if trend['pct_change'] > 0 else "#2ecc71" if trend['pct_change'] < 0 else "#f39c12"
+            
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"{icon} **{trend['category']}**  "
+                           f"{format_currency(trend['current'])} (was {format_currency(trend['previous'])})")
+            with col2:
+                st.write(f"<span style='color:{color}; font-weight:bold;'>{trend['pct_change']:+.1f}%</span>", 
+                        unsafe_allow_html=True)
 
 
 def compare_with_previous_month(data: dict, month_key: str) -> None:
@@ -1775,6 +2181,21 @@ def show_dashboard(data: dict) -> None:
                     else:
                         st.warning(f"⚠️ **Lexi - {warning['category']}**: {warning['percentage']:.0f}% of budget used")
         st.divider()
+    
+    # Data Integrity Checks
+    integrity = get_data_integrity_issues(data, month_key)
+    
+    if integrity["budget_not_set"]:
+        st.info(f"📋 **Budgets not set yet** for: {', '.join([OWNER_LABELS[o] for o in integrity['budget_not_set']])}")
+    
+    if integrity["missing_descriptions"]:
+        st.warning(f"📝 {len(integrity['missing_descriptions'])} transaction(s) missing descriptions")
+    
+    if integrity["unusual_amounts"]:
+        st.info(f"💰 {len(integrity['unusual_amounts'])} unusually large transaction(s) detected")
+    
+    if integrity["no_transactions"]:
+        st.info("📭 No transactions yet for this month")
 
     st.markdown("### 📈 Monthly Summary")
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -1838,7 +2259,7 @@ def show_dashboard(data: dict) -> None:
 
     st.divider()
     
-    # Visualizations and Comparisons
+    # Enhanced Visualizations Section
     viz_col1, viz_col2 = st.columns(2)
     with viz_col1:
         st.markdown("### 📊 Category Breakdown")
@@ -1850,8 +2271,41 @@ def show_dashboard(data: dict) -> None:
     
     st.divider()
     
+    # Category Growth Alerts
+    show_category_growth_alerts(data, month_key)
+    
+    st.divider()
+    
+    # Spending by Owner Comparison
+    st.markdown("### 👥 Spending Comparison: TyShawn vs Lexi")
+    show_spending_by_owner(data, month_key)
+    
+    st.divider()
+    
+    # Budget vs Actual Visualizations
+    st.markdown("### 💼 Budget vs Actual Spending")
+    budget_viz_col1, budget_viz_col2 = st.columns(2)
+    with budget_viz_col1:
+        show_budget_vs_actual(data, month_key, "tyshawn")
+    with budget_viz_col2:
+        show_budget_vs_actual(data, month_key, "lexi")
+    
+    st.divider()
+    
     st.markdown("### 📈 Month Comparison")
     compare_with_previous_month(data, month_key)
+    
+    st.divider()
+    
+    # Category Spending Trends
+    st.markdown("### 📊 Category Spending Trends")
+    show_category_trends(data, month_key)
+    
+    st.divider()
+    
+    # Cash Flow Forecast
+    st.markdown("### 🔮 3-Month Cash Flow Forecast")
+    show_cash_flow_forecast(data, month_key)
     
     st.divider()
     
@@ -2256,6 +2710,19 @@ def show_tracker(data: dict) -> None:
     
     # Search and Filter Section
     st.markdown("### 🔍 Search & Filter")
+    
+    # Cross-month search toggle
+    cross_month = st.checkbox("🔎 Search all months (not just current)", value=st.session_state.get("cross_month_search", False), key="cross_month_toggle")
+    st.session_state["cross_month_search"] = cross_month
+    
+    # Get appropriate dataframe for search
+    if cross_month:
+        df = pd.DataFrame(data.get("transactions", []))
+        if not df.empty:
+            df["date"] = pd.to_datetime(df["date"]).dt.date
+            df["entry_type_label"] = df["entry_type"].map(ENTRY_TYPE_LABELS)
+            df["owner_label"] = df["owner"].map(OWNER_LABELS)
+    
     search_col1, search_col2, search_col3 = st.columns(3)
     
     with search_col1:
