@@ -13,7 +13,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-from supabase import create_client, Client
+
+try:
+    from supabase import Client, create_client
+except ModuleNotFoundError:
+    Client = None
+    create_client = None
 
 
 # -----------------------------
@@ -797,8 +802,10 @@ def default_data_store():
 
 
 @st.cache_resource
-def get_supabase_client() -> Client | None:
+def get_supabase_client():
     """Return a cached Supabase client if credentials are configured, else None."""
+    if create_client is None:
+        return None
     try:
         url = st.secrets["supabase"]["url"]
         key = st.secrets["supabase"]["key"]
