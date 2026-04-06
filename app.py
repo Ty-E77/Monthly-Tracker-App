@@ -235,14 +235,20 @@ hr {
     color: white;
 }
 
-/* App-like mode: hide Streamlit chrome */
-header[data-testid="stHeader"],
-[data-testid="stToolbar"],
-[data-testid="stStatusWidget"],
-[data-testid="stDecoration"],
+/* App-like mode: keep sidebar toggle, hide extra chrome */
 #MainMenu,
-footer {
+footer,
+[data-testid="stStatusWidget"],
+[data-testid="stDecoration"] {
     display: none !important;
+}
+
+/* Keep sidebar reopen control visible */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 10000 !important;
 }
 
 /* ---------------------------------
