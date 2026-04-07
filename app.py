@@ -2186,6 +2186,7 @@ def plot_spending_by_category(df: pd.DataFrame, title: str = "Spending by Catego
         return
     
     spending = expenses.groupby("category")["amount"].sum().sort_values(ascending=False).head(10)
+    total_spending = float(spending.sum())
     
     fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
     ax.set_facecolor('white')
@@ -2193,13 +2194,14 @@ def plot_spending_by_category(df: pd.DataFrame, title: str = "Spending by Catego
     # Enhanced color palette
     colors = ['#FF6B6B', '#FFA500', '#FFD93D', '#6BCB77', '#4D96FF', '#9D84B7', '#FF85B3', '#FFB84D', '#A8E6CF', '#FFB3BA']
     
-    wedges, texts, autotexts = ax.pie(
+    wedges, _, autotexts = ax.pie(
         spending.values, 
-        labels=spending.index, 
-        autopct='%1.1f%%',
+        labels=None,
+        autopct=lambda p: f"{p:.1f}%" if p >= 5 else "",
         colors=colors[:len(spending)],
         startangle=90,
-        textprops={'fontsize': 10, 'weight': 'bold'},
+        pctdistance=0.72,
+        textprops={'fontsize': 9, 'weight': 'bold'},
         wedgeprops={'edgecolor': 'white', 'linewidth': 2}
     )
     
@@ -2209,13 +2211,25 @@ def plot_spending_by_category(df: pd.DataFrame, title: str = "Spending by Catego
         autotext.set_fontsize(9)
         autotext.set_weight('bold')
     
-    # Style labels
-    for text in texts:
-        text.set_color('#2c3e50')
-        text.set_fontsize(9)
-        text.set_weight('bold')
+    # Build legend labels to avoid overlapping category names on wedges
+    legend_labels = []
+    for category, amount in spending.items():
+        pct = (amount / total_spending * 100) if total_spending > 0 else 0
+        legend_labels.append(f"{category} — {format_currency(float(amount))} ({pct:.1f}%)")
+
+    ax.legend(
+        wedges,
+        legend_labels,
+        title="Categories",
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+        fontsize=9,
+        title_fontsize=10,
+    )
     
     ax.set_title(title, fontsize=13, fontweight='bold', color='#2c3e50', pad=20)
+    plt.tight_layout()
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
