@@ -277,6 +277,7 @@
         {
             "id": "e622e2ca-0b17-417e-ada7-0376fa0659a8",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 0.52,
             "category": "Other",
@@ -292,6 +293,7 @@
         {
             "id": "b778b95d-7bc6-4a99-9cc0-a17a8fd4787e",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.75,
             "category": "Groceries",
@@ -307,6 +309,7 @@
         {
             "id": "7d7c2043-9934-400d-bae2-aefb2b970c20",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 10.58,
             "category": "Groceries",
@@ -322,6 +325,7 @@
         {
             "id": "b6b9e23f-90ee-4c56-a311-48df9a1b382c",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 8.79,
             "category": "Eating Out",
@@ -337,6 +341,7 @@
         {
             "id": "58f6c860-3019-45cd-a0a6-851c20b5f286",
             "date": "2026-04-02",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 11.48,
             "category": "Eating Out",
@@ -352,6 +357,7 @@
         {
             "id": "c9b469e2-df3c-4701-b20b-9ad78b793d7b",
             "date": "2026-04-02",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 12.49,
             "category": "Eating Out",
@@ -367,6 +373,7 @@
         {
             "id": "296a9dbf-fad1-4f13-8197-f57a7fcbad0c",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 2.58,
             "category": "Groceries",
@@ -382,6 +389,7 @@
         {
             "id": "1878ba3c-dfdd-45e4-9afd-ad88d64f2d71",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 13.48,
             "category": "Eating Out",
@@ -397,6 +405,7 @@
         {
             "id": "3b4c136f-151e-49d7-85df-427ca749f86e",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 8.79,
             "category": "Eating Out",
@@ -412,6 +421,7 @@
         {
             "id": "a81d332a-503c-45f5-a9f0-28f084085fcf",
             "date": "2026-04-04",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 25.3,
             "category": "Gas",
@@ -427,6 +437,7 @@
         {
             "id": "f89b5c5c-d946-41bf-a649-e44f59d2e2d7",
             "date": "2026-04-04",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 12.49,
             "category": "Eating Out",
@@ -442,6 +453,7 @@
         {
             "id": "7e703df1-fab1-482e-952f-e4fd1ca3af38",
             "date": "2026-04-04",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.52,
             "category": "Groceries",
@@ -457,6 +469,7 @@
         {
             "id": "4dd922a8-4dbe-4ef3-acb5-0497a0355937",
             "date": "2026-04-05",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 12.03,
             "category": "Eating Out",
@@ -472,6 +485,7 @@
         {
             "id": "276f2c57-e94b-481b-be32-fb59ed479c1d",
             "date": "2026-04-05",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 7.49,
             "category": "Subscriptions",
@@ -487,6 +501,7 @@
         {
             "id": "22ab89a4-133e-4daf-b834-f3609c2d4c2b",
             "date": "2026-03-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 75.0,
             "category": "Entertainment",
@@ -502,6 +517,7 @@
         {
             "id": "cab6fdb3-aa2a-4bbb-a794-94280eff6b75",
             "date": "2026-03-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 150.94,
             "category": "Other",
@@ -517,6 +533,7 @@
         {
             "id": "08e1a85c-96d5-45fe-aafd-ec480cc5f970",
             "date": "2026-03-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -532,6 +549,7 @@
         {
             "id": "5602bdfd-6886-4e63-a1ef-058c24c34ed7",
             "date": "2026-03-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.25,
             "category": "Travel",
@@ -547,6 +565,7 @@
         {
             "id": "a6b1b3e6-7036-4a32-8e39-1997057f8e6a",
             "date": "2026-03-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 3.0,
             "category": "Groceries",
@@ -562,6 +581,7 @@
         {
             "id": "02cca983-ee48-4b55-92fb-9933e38a1260",
             "date": "2026-03-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.99,
             "category": "Subscriptions",
@@ -577,6 +597,7 @@
         {
             "id": "f57840a7-9ba2-44db-855b-29f1e6a0442c",
             "date": "2026-03-05",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 7.38,
             "category": "Eating Out",
@@ -592,6 +613,7 @@
         {
             "id": "7196b0c9-ea9f-4a92-8dfc-ba96da27cb4d",
             "date": "2026-03-05",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 4.6,
             "category": "Travel",
@@ -607,6 +629,7 @@
         {
             "id": "a0765367-c469-45f5-9610-d624bebf7382",
             "date": "2026-03-05",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 7.49,
             "category": "Subscriptions",
@@ -622,6 +645,7 @@
         {
             "id": "f047cf8d-f6db-439e-bc02-fc574e298b9c",
             "date": "2026-03-05",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 3.0,
             "category": "Groceries",
@@ -637,6 +661,7 @@
         {
             "id": "7eed1841-4b19-4e66-a25c-28e250cbc892",
             "date": "2026-03-07",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 8.79,
             "category": "Eating Out",
@@ -652,6 +677,7 @@
         {
             "id": "207e362d-3966-4bfe-87de-c1c2734bd10e",
             "date": "2026-03-09",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 11.99,
             "category": "Groceries",
@@ -667,6 +693,7 @@
         {
             "id": "0fe64ae8-4758-4a23-ab40-8cd8d98c4c95",
             "date": "2026-03-11",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 624.28,
             "category": "Paycheck",
@@ -682,6 +709,7 @@
         {
             "id": "292c56fa-0972-4662-b8df-b2a59ca57f40",
             "date": "2026-03-11",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 100.0,
             "category": "Phone Bill",
@@ -697,6 +725,7 @@
         {
             "id": "0f39d9b6-ba3f-420e-ab44-7c6e153d88dc",
             "date": "2026-03-11",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 50.0,
             "category": "Car Insurance",
@@ -712,6 +741,7 @@
         {
             "id": "a6f615b4-bf37-47fb-b960-8c558f3af2d4",
             "date": "2026-03-11",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 35.0,
             "category": "Health",
@@ -727,6 +757,7 @@
         {
             "id": "4cbe5822-5a03-4278-a4bd-27e963e659f9",
             "date": "2026-03-12",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 2.99,
             "category": "Subscriptions",
@@ -742,6 +773,7 @@
         {
             "id": "dcda399d-b8b8-4d13-990e-e78d5c03344c",
             "date": "2026-03-13",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.51,
             "category": "Groceries",
@@ -757,6 +789,7 @@
         {
             "id": "90704c78-7980-4590-85e3-14cab0801c1d",
             "date": "2026-03-14",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 19.47,
             "category": "Eating Out",
@@ -772,6 +805,7 @@
         {
             "id": "cceaf205-0636-4548-8a1e-3fc6eda4c30d",
             "date": "2026-03-14",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 47.18,
             "category": "Gas",
@@ -787,6 +821,7 @@
         {
             "id": "e264e130-f7f5-463d-8571-45b8681c594a",
             "date": "2026-03-14",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 2.85,
             "category": "Travel",
@@ -802,6 +837,7 @@
         {
             "id": "73cf6969-95ed-458a-8a8d-fe9fd2577331",
             "date": "2026-03-14",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -817,6 +853,7 @@
         {
             "id": "6f8760c2-a86a-40e5-bd28-b10fb03c252b",
             "date": "2026-03-14",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 25.47,
             "category": "Groceries",
@@ -832,6 +869,7 @@
         {
             "id": "df67eab6-ea0c-4c48-96a7-f7f5d956f175",
             "date": "2026-03-15",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 2.0,
             "category": "Entertainment",
@@ -847,6 +885,7 @@
         {
             "id": "005ff857-29d4-4509-b4d7-7a10017623ec",
             "date": "2026-03-15",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -862,6 +901,7 @@
         {
             "id": "7838ab7d-0e70-4444-bb88-3fdcf420a330",
             "date": "2026-03-15",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 14.99,
             "category": "Eating Out",
@@ -877,6 +917,7 @@
         {
             "id": "82409e57-6f14-4a88-b5cb-cb450ce24d88",
             "date": "2026-03-16",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.51,
             "category": "Groceries",
@@ -892,6 +933,7 @@
         {
             "id": "aa6ea071-acc6-470b-9478-8603277e0afa",
             "date": "2026-03-16",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 10.98,
             "category": "Eating Out",
@@ -907,6 +949,7 @@
         {
             "id": "6b57bf0b-c211-4145-a16b-59e8fff8b733",
             "date": "2026-03-17",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 12.67,
             "category": "Other",
@@ -922,6 +965,7 @@
         {
             "id": "83fd1762-0d84-45ef-a980-41229507815e",
             "date": "2026-03-18",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 4.99,
             "category": "Eating Out",
@@ -937,6 +981,7 @@
         {
             "id": "7f8f7ee5-d3c5-4518-a20c-0337ac8c6b42",
             "date": "2026-03-18",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 4.99,
             "category": "Entertainment",
@@ -952,6 +997,7 @@
         {
             "id": "2a4a175f-0303-4efe-8f2f-ca4a56982d8f",
             "date": "2026-03-18",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -967,6 +1013,7 @@
         {
             "id": "2a37804b-2ffa-4bba-87b9-64eae65d70d1",
             "date": "2026-03-19",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 3.35,
             "category": "Travel",
@@ -982,6 +1029,7 @@
         {
             "id": "55865c25-72cf-4247-9757-8731f79819d1",
             "date": "2026-03-19",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 8.99,
             "category": "Eating Out",
@@ -997,6 +1045,7 @@
         {
             "id": "68e4b4e5-6038-4047-b072-908ed6498513",
             "date": "2026-03-19",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 14.99,
             "category": "Eating Out",
@@ -1012,6 +1061,7 @@
         {
             "id": "5eeba7a4-88bf-4256-93d6-7ba64d5dbff7",
             "date": "2026-03-20",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -1027,6 +1077,7 @@
         {
             "id": "bea177db-3ed0-4bcf-a12e-28f1b1bceea7",
             "date": "2026-03-21",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 16.98,
             "category": "Eating Out",
@@ -1042,6 +1093,7 @@
         {
             "id": "b633784a-e60e-4a3b-ba03-e55783fcc1ab",
             "date": "2026-03-21",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 22.99,
             "category": "Eating Out",
@@ -1057,6 +1109,7 @@
         {
             "id": "3ef2949e-7059-4f1b-8bc8-e122f7a2fa83",
             "date": "2026-03-21",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -1072,6 +1125,7 @@
         {
             "id": "52178add-3d27-4b79-a796-53e32d849835",
             "date": "2026-03-22",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -1087,6 +1141,7 @@
         {
             "id": "3320b36e-664d-4438-8e78-0263d83f67ce",
             "date": "2026-03-22",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 14.99,
             "category": "Eating Out",
@@ -1102,6 +1157,7 @@
         {
             "id": "ebc2137a-41bf-47ce-bc88-6bd4b56e8034",
             "date": "2026-03-23",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 8.47,
             "category": "Eating Out",
@@ -1117,6 +1173,7 @@
         {
             "id": "e8226141-b17e-4d10-aa37-a5a07e9723cf",
             "date": "2026-03-24",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 52.27,
             "category": "Gas",
@@ -1132,6 +1189,7 @@
         {
             "id": "077d0b5e-477d-409c-bea2-091b43999c7d",
             "date": "2026-03-24",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 11.98,
             "category": "Groceries",
@@ -1147,6 +1205,7 @@
         {
             "id": "7426dfb6-33f1-48aa-8d91-32642da331fe",
             "date": "2026-03-24",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 13.19,
             "category": "Eating Out",
@@ -1162,6 +1221,7 @@
         {
             "id": "239db100-c576-41cf-bec9-5febb60e5a66",
             "date": "2026-03-25",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 819.57,
             "category": "Paycheck",
@@ -1177,6 +1237,7 @@
         {
             "id": "8831a418-3992-4755-bb00-1833c33b6b86",
             "date": "2026-03-25",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 50.55,
             "category": "Loan Payment",
@@ -1192,6 +1253,7 @@
         {
             "id": "3d12e5e4-8d44-4542-bbab-7c2620cd9457",
             "date": "2026-03-25",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 100.0,
             "category": "Credit Card Payment",
@@ -1207,6 +1269,7 @@
         {
             "id": "a9ef854e-bb35-4ff9-8829-c9c51f5599cf",
             "date": "2026-03-25",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.29,
             "category": "Eating Out",
@@ -1222,6 +1285,7 @@
         {
             "id": "63f0ffe4-0b3c-48bf-abfc-a71e9299ab8b",
             "date": "2026-03-25",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 16.22,
             "category": "Eating Out",
@@ -1237,6 +1301,7 @@
         {
             "id": "ccd56736-b182-4203-abdf-c4b5eab8b4d5",
             "date": "2026-03-26",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 246.81,
             "category": "Credit Card Payment",
@@ -1252,6 +1317,7 @@
         {
             "id": "67f6721a-1583-4839-808c-8ab7eea03865",
             "date": "2026-03-26",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 69.99,
             "category": "Subscriptions",
@@ -1267,6 +1333,7 @@
         {
             "id": "529c0f16-b87e-48de-8917-b920a5af80e0",
             "date": "2026-03-26",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 24.98,
             "category": "Eating Out",
@@ -1282,6 +1349,7 @@
         {
             "id": "ebd70b45-e7e4-48c4-87cb-a59cf5593ec0",
             "date": "2026-03-27",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 10.49,
             "category": "Eating Out",
@@ -1297,6 +1365,7 @@
         {
             "id": "bc9a7e22-22de-4b45-aa66-5724328a0522",
             "date": "2026-03-27",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 23.78,
             "category": "Eating Out",
@@ -1312,6 +1381,7 @@
         {
             "id": "ae0b5fb7-dd42-4706-b5c0-96fc48582e12",
             "date": "2026-03-28",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 27.06,
             "category": "Eating Out",
@@ -1327,6 +1397,7 @@
         {
             "id": "c97eb098-8792-4dd7-b4f6-9b9e88a861df",
             "date": "2026-03-28",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 23.45,
             "category": "Eating Out",
@@ -1342,6 +1413,7 @@
         {
             "id": "6a5466aa-8e1c-4fc5-aaab-d377059b94e0",
             "date": "2026-03-29",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 30.43,
             "category": "Eating Out",
@@ -1357,6 +1429,7 @@
         {
             "id": "b1c2e497-57be-49e6-afd9-210c4cefbe2d",
             "date": "2026-03-29",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 14.99,
             "category": "Eating Out",
@@ -1372,6 +1445,7 @@
         {
             "id": "e78dfbd0-f4f1-4c6f-bd14-415644156e56",
             "date": "2026-03-30",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 4.88,
             "category": "Eating Out",
@@ -1387,6 +1461,7 @@
         {
             "id": "38151f72-f564-4c27-ac51-6d51688db3ce",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 8.35,
             "category": "Travel",
@@ -1402,6 +1477,7 @@
         {
             "id": "b39b9b19-33a9-4085-87df-4bfa7fd2b7ca",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.58,
             "category": "Eating Out",
@@ -1417,6 +1493,7 @@
         {
             "id": "877297cd-15d3-4ec0-a15c-c8bac688657d",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.98,
             "category": "Eating Out",
@@ -1432,6 +1509,7 @@
         {
             "id": "54a72807-8b89-4423-a251-975b7b44227b",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 9.35,
             "category": "Eating Out",
@@ -1447,6 +1525,7 @@
         {
             "id": "f90109ab-6366-4917-a9cb-872909c2045c",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.99,
             "category": "Subscriptions",
@@ -1462,6 +1541,7 @@
         {
             "id": "ba2cfcee-a91c-4fb9-aafe-84d49b58ef79",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 35.0,
             "category": "Health",
@@ -1477,6 +1557,7 @@
         {
             "id": "bcb7284b-9a06-4b94-9106-60034d8d8481",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 165.29999999999995,
             "category": "Carryover Balance",
@@ -1492,6 +1573,7 @@
         {
             "id": "c0ad7962-ab83-4196-958a-1c1d41f06199",
             "date": "2026-03-30",
+            "tags": "",
             "owner": "lexi",
             "amount": 191.05,
             "category": "Other",
@@ -1507,6 +1589,7 @@
         {
             "id": "cbf5742b-bf43-483d-bd65-02f9feae1e47",
             "date": "2026-05-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 23.1,
             "category": "Carryover Balance",
@@ -1514,7 +1597,7 @@
             "created_at": "2026-04-06T21:07:03",
             "created_by": "none",
             "entry_type": "revenue",
-            "updated_at": "2026-04-06T21:30:46",
+            "updated_at": "2026-04-07T00:26:38",
             "description": "Carryover from April 2026",
             "recurrence_count": 1,
             "recurrence_frequency": "None"
@@ -1522,6 +1605,7 @@
         {
             "id": "eb301cc1-fdd4-43f6-a82b-8efa241aed41",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.6,
             "category": "Groceries",
@@ -1537,6 +1621,7 @@
         {
             "id": "bb07c1b1-8e56-4d67-aa5d-17b097af6a6c",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 1.6,
             "category": "Groceries",
@@ -1552,6 +1637,7 @@
         {
             "id": "f2bede7d-f560-42ed-8c23-2200c5e84000",
             "date": "2026-04-06",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 10.75,
             "category": "Travel",
@@ -1567,6 +1653,7 @@
         {
             "id": "55be5f54-4dc8-466b-a262-bcdb7db271b2",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "lexi",
             "amount": 401.32,
             "category": "Paycheck",
@@ -1582,6 +1669,7 @@
         {
             "id": "c893099d-83ff-4ca5-a048-d365016a63b1",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "lexi",
             "amount": 3.45,
             "category": "Eating Out",
@@ -1597,6 +1685,7 @@
         {
             "id": "3187f824-fcfa-4790-b8c1-09f70ed57172",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "lexi",
             "amount": 81.98,
             "category": "Shopping",
@@ -1612,6 +1701,7 @@
         {
             "id": "b3f6ea38-c18a-4e3d-8889-afa440d073d4",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "lexi",
             "amount": 2.46,
             "category": "Other",
@@ -1627,6 +1717,7 @@
         {
             "id": "b408d1c8-d356-42ff-af03-8755733bd25c",
             "date": "2026-04-02",
+            "tags": "",
             "owner": "lexi",
             "amount": 4.99,
             "category": "Eating Out",
@@ -1642,6 +1733,7 @@
         {
             "id": "ae0e97f8-24d0-4363-942d-3a1d9776d977",
             "date": "2026-04-02",
+            "tags": "",
             "owner": "lexi",
             "amount": 28.45,
             "category": "Health",
@@ -1657,6 +1749,7 @@
         {
             "id": "74a748f8-33f9-4ece-a459-7ccfd5fc19fa",
             "date": "2026-04-02",
+            "tags": "",
             "owner": "lexi",
             "amount": 1.0,
             "category": "Eating Out",
@@ -1672,6 +1765,7 @@
         {
             "id": "2210b694-a10b-450c-944e-2c63c375a43c",
             "date": "2026-04-02",
+            "tags": "",
             "owner": "lexi",
             "amount": 250.0,
             "category": "Savings Transfer",
@@ -1687,6 +1781,7 @@
         {
             "id": "1208e279-b6a8-4c98-b41a-649d951eec3a",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "lexi",
             "amount": 9.98,
             "category": "Eating Out",
@@ -1702,6 +1797,7 @@
         {
             "id": "de4a3d02-c2bf-4320-a6ee-a1cdaf629683",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "lexi",
             "amount": 100.98,
             "category": "Shopping",
@@ -1717,6 +1813,7 @@
         {
             "id": "68fb4115-8e52-4175-b4e1-c4e7fc480960",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "lexi",
             "amount": 4.99,
             "category": "Shopping",
@@ -1732,6 +1829,7 @@
         {
             "id": "c8485444-3955-4292-926b-df7a1327e706",
             "date": "2026-04-03",
+            "tags": "",
             "owner": "lexi",
             "amount": 15.0,
             "category": "Other",
@@ -1747,6 +1845,7 @@
         {
             "id": "81b9f1a7-266e-4252-96dd-c1b42c57a3ce",
             "date": "2026-04-04",
+            "tags": "",
             "owner": "lexi",
             "amount": 6.48,
             "category": "Groceries",
@@ -1762,6 +1861,7 @@
         {
             "id": "14164740-7c05-47a6-b5a2-10f275badc6a",
             "date": "2026-04-01",
+            "tags": "",
             "owner": "lexi",
             "amount": 588.92,
             "category": "Carryover Balance",
@@ -1777,6 +1877,7 @@
         {
             "id": "bf1440ea-8330-4c97-bf8a-76a1f29162a0",
             "date": "2026-05-01",
+            "tags": "",
             "owner": "lexi",
             "amount": 77.61,
             "category": "Carryover Balance",
@@ -1792,6 +1893,7 @@
         {
             "id": "35d3ec1b-de0b-4391-a702-6bc313d1a337",
             "date": "2026-03-31",
+            "tags": "",
             "owner": "lexi",
             "amount": 8527.86,
             "category": "Savings Deposit",
@@ -1807,6 +1909,7 @@
         {
             "id": "5bd3832e-30af-4c9c-abc2-7f7973049b80",
             "date": "2026-06-01",
+            "tags": "",
             "owner": "tyshawn",
             "amount": 23.1,
             "category": "Carryover Balance",
@@ -1822,6 +1925,7 @@
         {
             "id": "ac0f4531-8939-4b86-a6be-94689c96014a",
             "date": "2026-06-01",
+            "tags": "",
             "owner": "lexi",
             "amount": 82.61,
             "category": "Carryover Balance",
@@ -1837,6 +1941,7 @@
         {
             "id": "e11224bd-7e80-4a70-8dc2-dde510be4ff2",
             "date": "2026-04-06",
+            "tags": "",
             "owner": "lexi",
             "amount": 5.0,
             "category": "Shopping",
