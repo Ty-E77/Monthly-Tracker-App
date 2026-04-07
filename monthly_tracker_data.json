@@ -203,6 +203,74 @@
                     "Savings Deposit": 0.0
                 }
             }
+        },
+        "2026-06": {
+            "lexi": {
+                "expense": {
+                    "Gas": 0.0,
+                    "Other": 5.82,
+                    "Health": 9.483333333333333,
+                    "Travel": 0.0,
+                    "Shopping": 62.650000000000006,
+                    "Groceries": 2.16,
+                    "Eating Out": 6.473333333333334,
+                    "Phone Bill": 0.0,
+                    "Toiletries": 0.0,
+                    "Debt Payment": 0.0,
+                    "Loan Payment": 0.0,
+                    "Car Insurance": 0.0,
+                    "Entertainment": 0.0,
+                    "Subscriptions": 0.0,
+                    "Rent + Utilities": 0.0,
+                    "Savings Transfer": 83.33333333333333,
+                    "Credit Card Payment": 0.0
+                },
+                "revenue": {
+                    "Bonus": 0.0,
+                    "Other": 63.68333333333334,
+                    "Refund": 0.0,
+                    "Paycheck": 133.77333333333334,
+                    "Cash Gift": 0.0,
+                    "Side Hustle": 0.0,
+                    "Savings Transfer": 0.0
+                },
+                "savings": {
+                    "Savings Deposit": 2842.6200000000003
+                }
+            },
+            "tyshawn": {
+                "expense": {
+                    "Gas": 41.583333333333336,
+                    "Other": 4.223333333333334,
+                    "Health": 23.333333333333332,
+                    "Travel": 13.049999999999999,
+                    "Shopping": 0.0,
+                    "Groceries": 26.03,
+                    "Eating Out": 175.42,
+                    "Phone Bill": 33.333333333333336,
+                    "Toiletries": 0.0,
+                    "Debt Payment": 0.0,
+                    "Loan Payment": 16.849999999999998,
+                    "Car Insurance": 16.666666666666668,
+                    "Entertainment": 27.33,
+                    "Subscriptions": 30.64666666666666,
+                    "Rent + Utilities": 0.0,
+                    "Savings Transfer": 0.0,
+                    "Credit Card Payment": 115.60333333333334
+                },
+                "revenue": {
+                    "Bonus": 0.0,
+                    "Other": 50.48666666666667,
+                    "Refund": 0.0,
+                    "Paycheck": 481.2833333333333,
+                    "Cash Gift": 0.0,
+                    "Side Hustle": 0.0,
+                    "Savings Transfer": 0.0
+                },
+                "savings": {
+                    "Savings Deposit": 0.0
+                }
+            }
         }
     },
     "transactions": [
@@ -1710,13 +1778,13 @@
             "id": "bf1440ea-8330-4c97-bf8a-76a1f29162a0",
             "date": "2026-05-01",
             "owner": "lexi",
-            "amount": 82.61,
+            "amount": 77.61,
             "category": "Carryover Balance",
             "month_key": "2026-05",
             "created_at": "2026-04-06T21:37:03",
             "created_by": "none",
             "entry_type": "revenue",
-            "updated_at": "",
+            "updated_at": "2026-04-06T22:49:17",
             "description": "Carryover from April 2026",
             "recurrence_count": 1,
             "recurrence_frequency": "None"
@@ -1733,6 +1801,51 @@
             "entry_type": "savings",
             "updated_at": "",
             "description": "Initial Savings",
+            "recurrence_count": 1,
+            "recurrence_frequency": "None"
+        },
+        {
+            "id": "5bd3832e-30af-4c9c-abc2-7f7973049b80",
+            "date": "2026-06-01",
+            "owner": "tyshawn",
+            "amount": 23.1,
+            "category": "Carryover Balance",
+            "month_key": "2026-06",
+            "created_at": "2026-04-06T18:24:04",
+            "created_by": "tyshawn",
+            "entry_type": "revenue",
+            "updated_at": "",
+            "description": "Carryover from May 2026",
+            "recurrence_count": 1,
+            "recurrence_frequency": "None"
+        },
+        {
+            "id": "ac0f4531-8939-4b86-a6be-94689c96014a",
+            "date": "2026-06-01",
+            "owner": "lexi",
+            "amount": 82.61,
+            "category": "Carryover Balance",
+            "month_key": "2026-06",
+            "created_at": "2026-04-06T18:24:04",
+            "created_by": "tyshawn",
+            "entry_type": "revenue",
+            "updated_at": "",
+            "description": "Carryover from May 2026",
+            "recurrence_count": 1,
+            "recurrence_frequency": "None"
+        },
+        {
+            "id": "e11224bd-7e80-4a70-8dc2-dde510be4ff2",
+            "date": "2026-04-06",
+            "owner": "lexi",
+            "amount": 5.0,
+            "category": "Shopping",
+            "month_key": "2026-04",
+            "created_at": "2026-04-06T22:49:16",
+            "created_by": "lexi",
+            "entry_type": "expense",
+            "updated_at": "",
+            "description": "Hair tie",
             "recurrence_count": 1,
             "recurrence_frequency": "None"
         }

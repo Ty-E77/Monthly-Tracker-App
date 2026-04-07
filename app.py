@@ -442,8 +442,8 @@ hide_streamlit_floating_ui()
 APP_TITLE = "Monthly Budget + Tracker"
 DATA_FILE = Path(__file__).parent / "monthly_tracker_data.json"
 USER_CREDENTIALS = {
-    "tyshawn": os.getenv("TYSHAWN_PASSWORD", "lexi"),
-    "lexi": os.getenv("LEXI_PASSWORD", "tyshawn"),
+    "tyshawn": os.getenv("TYSHAWN_PASSWORD", "").strip(),
+    "lexi": os.getenv("LEXI_PASSWORD", "").strip(),
 }
 DISPLAY_NAMES = {
     "tyshawn": "TyShawn",
@@ -546,21 +546,6 @@ def get_all_tags(data: dict) -> list[str]:
     return sorted(list(all_tags))
 
 
-def get_transaction_templates(data: dict) -> dict:
-    """Get saved transaction templates."""
-    if "templates" not in data:
-        data["templates"] = {}
-    return data.get("templates", {})
-
-
-def save_transaction_template(data: dict, template_name: str, template_data: dict) -> None:
-    """Save a transaction as a template for quick reuse."""
-    if "templates" not in data:
-        data["templates"] = {}
-    data["templates"][template_name] = template_data
-    save_json_dict(DATA_FILE, data)
-
-
 def get_data_integrity_issues(data: dict, month_key: str) -> dict:
     """Check for data integrity issues like unset budgets, unusual amounts, etc."""
     issues = {
@@ -614,8 +599,12 @@ def show_category_growth_alerts(data: dict, month_key: str) -> None:
     if curr_df.empty or prev_df.empty:
         return
     
-    curr_expenses = curr_df[curr_df["entry_type"] == "expense"].groupby("category")["amount"].sum()
-    prev_expenses = prev_df[prev_df["entry_type"] == "expense"].groupby("category")["amount"].sum()
+    curr_expenses = curr_df[
+        (curr_df["entry_type"] == "expense") & (curr_df["category"] != CARRYOVER_CATEGORY)
+    ].groupby("category")["amount"].sum()
+    prev_expenses = prev_df[
+        (prev_df["entry_type"] == "expense") & (prev_df["category"] != CARRYOVER_CATEGORY)
+    ].groupby("category")["amount"].sum()
     
     alerts = []
     for cat in curr_expenses.index:
@@ -661,11 +650,11 @@ def show_cash_flow_forecast(data: dict, month_key: str) -> None:
                        sum(float(txn.get("amount", 0)) for txn in recurring 
                            if txn.get("entry_type") == "expense")
     
-    # Project 3 months
+    # Project next 3 months
     forecast_data = []
     current_balance = curr_summary["net"]
     
-    for i in range(3):
+    for i in range(1, 4):
         future_month = month + i
         if future_month > 12:
             future_month -= 12
@@ -706,10 +695,10 @@ def show_spending_by_owner(data: dict, month_key: str) -> None:
         return
     
     # Create comparison chart
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), facecolor='#1e1e1e')
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), facecolor='white')
     
     for ax in [ax1, ax2]:
-        ax.set_facecolor('#1e1e1e')
+        ax.set_facecolor('white')
     
     # Revenue vs Expense comparison
     owner_summary = personal_df.groupby("owner").apply(
@@ -734,18 +723,18 @@ def show_spending_by_owner(data: dict, month_key: str) -> None:
     ax1.bar(x, expense_vals, width, label='Expenses', color='#e74c3c', edgecolor='white', linewidth=1.5)
     ax1.bar([i + width for i in x], savings_vals, width, label='Savings', color='#3498db', edgecolor='white', linewidth=1.5)
     
-    ax1.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#e0e0e0')
-    ax1.set_title('Revenue vs Expenses vs Savings', fontsize=12, fontweight='bold', color='#e0e0e0')
+    ax1.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#2c3e50')
+    ax1.set_title('Revenue vs Expenses vs Savings', fontsize=12, fontweight='bold', color='#2c3e50')
     ax1.set_xticks(x)
-    ax1.set_xticklabels(owner_labels, color='#e0e0e0')
-    ax1.legend(fontsize=9, facecolor='#2a2a2a', edgecolor='#555', labelcolor='#e0e0e0')
-    ax1.grid(axis='y', alpha=0.2, linestyle='--')
+    ax1.set_xticklabels(owner_labels, color='#2c3e50')
+    ax1.legend(fontsize=9, facecolor='white', edgecolor='#cccccc', labelcolor='#2c3e50')
+    ax1.grid(axis='y', alpha=0.3, linestyle='--')
     ax1.set_axisbelow(True)
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
-    ax1.spines['left'].set_color('#555')
-    ax1.spines['bottom'].set_color('#555')
-    ax1.tick_params(colors='#e0e0e0')
+    ax1.spines['left'].set_color('#cccccc')
+    ax1.spines['bottom'].set_color('#cccccc')
+    ax1.tick_params(colors='#555555')
     ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}' if x >= 0 else f'-${abs(x):,.0f}'))
     
     # Net comparison
@@ -753,16 +742,16 @@ def show_spending_by_owner(data: dict, month_key: str) -> None:
     colors = ['#2ecc71' if val > 0 else '#e74c3c' for val in net_vals]
     bars = ax2.bar(owner_labels, net_vals, color=colors, edgecolor='white', linewidth=2, alpha=0.8)
     
-    ax2.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#e0e0e0')
-    ax2.set_title('Net Balance Comparison', fontsize=12, fontweight='bold', color='#e0e0e0')
+    ax2.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#2c3e50')
+    ax2.set_title('Net Balance Comparison', fontsize=12, fontweight='bold', color='#2c3e50')
     ax2.axhline(y=0, color='#999', linestyle='-', linewidth=1)
-    ax2.grid(axis='y', alpha=0.2, linestyle='--')
+    ax2.grid(axis='y', alpha=0.3, linestyle='--')
     ax2.set_axisbelow(True)
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
-    ax2.spines['left'].set_color('#555')
-    ax2.spines['bottom'].set_color('#555')
-    ax2.tick_params(colors='#e0e0e0')
+    ax2.spines['left'].set_color('#cccccc')
+    ax2.spines['bottom'].set_color('#cccccc')
+    ax2.tick_params(colors='#555555')
     ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}' if x >= 0 else f'-${abs(x):,.0f}'))
     
     # Add value labels
@@ -770,7 +759,7 @@ def show_spending_by_owner(data: dict, month_key: str) -> None:
         height = bar.get_height()
         ax2.text(bar.get_x() + bar.get_width()/2., height,
                 f'${height:.0f}', ha='center', va='bottom' if height > 0 else 'top',
-                fontsize=10, color='#e0e0e0', weight='bold')
+                fontsize=10, color='#2c3e50', weight='bold')
     
     plt.tight_layout()
     st.pyplot(fig, use_container_width=True)
@@ -1018,10 +1007,10 @@ def apply_prior_month_actuals_to_budget(data: dict, new_month_key: str, prior_mo
         "savings": SAVINGS_CATEGORIES,
     }
     
-    # Collect prior 2 months of data
+    # Collect prior 3 months of data
     prior_months = [prior_month_key]
     temp_key = prior_month_key
-    for _ in range(1):
+    for _ in range(2):
         temp_key = previous_month_key(temp_key)
         if temp_key in data.get("budgets", {}):
             prior_months.append(temp_key)
@@ -1085,8 +1074,33 @@ def ensure_month_exists(data: dict, month_key: str) -> str | None:
 # -----------------------------
 # Helpers: validation + parsing
 # -----------------------------
+def configured_user_credentials() -> dict[str, str]:
+    credentials = {
+        "tyshawn": USER_CREDENTIALS.get("tyshawn", ""),
+        "lexi": USER_CREDENTIALS.get("lexi", ""),
+    }
+
+    # Optional fallback to Streamlit secrets for cloud deployments
+    try:
+        auth_secrets = st.secrets.get("auth", {})
+        if not credentials["tyshawn"]:
+            credentials["tyshawn"] = str(auth_secrets.get("tyshawn_password", "")).strip()
+        if not credentials["lexi"]:
+            credentials["lexi"] = str(auth_secrets.get("lexi_password", "")).strip()
+    except Exception:
+        pass
+
+    return credentials
+
+
+def auth_is_configured() -> bool:
+    credentials = configured_user_credentials()
+    return bool(credentials.get("tyshawn")) and bool(credentials.get("lexi"))
+
+
 def validate_credentials(username: str, password: str) -> bool:
-    return USER_CREDENTIALS.get(username.lower().strip()) == password.strip()
+    credentials = configured_user_credentials()
+    return credentials.get(username.lower().strip()) == password.strip()
 
 
 def normalize_transaction(record: dict) -> dict | None:
@@ -1124,6 +1138,7 @@ def normalize_transaction(record: dict) -> dict | None:
         "updated_at": str(record.get("updated_at", "")),
         "recurrence_frequency": str(record.get("recurrence_frequency", "None")),
         "recurrence_count": int(record.get("recurrence_count", 1)),
+        "tags": str(record.get("tags", "")),
     }
 
     if normalized["entry_type"] not in ["expense", "revenue", "savings"]:
@@ -1176,6 +1191,14 @@ def sanitize_loaded_data(data: dict) -> dict:
         if normalized:
             clean_transactions.append(normalized)
     clean["transactions"] = clean_transactions
+
+    # Preserve ancillary data that sanitize should not destroy
+    if isinstance(data.get("savings_goals"), dict):
+        clean["savings_goals"] = data["savings_goals"]
+    if isinstance(data.get("custom_categories"), dict):
+        clean["custom_categories"] = data["custom_categories"]
+    if isinstance(data.get("templates"), dict):
+        clean["templates"] = data["templates"]
 
     ensure_month_exists(clean, month_key_from_date(date.today()))
     return clean
@@ -1593,7 +1616,10 @@ def total_savings(data: dict) -> float:
     if df.empty:
         return 0.0
 
-    savings_df = df[df["entry_type"] == "savings"].copy()
+    # Exclude carryover entries — those are balance rollovers, not real deposits
+    savings_df = df[
+        (df["entry_type"] == "savings") & (df["category"] != CARRYOVER_CATEGORY)
+    ].copy()
     return float(savings_df["amount"].sum())
 
 
@@ -1736,8 +1762,14 @@ def get_budget_status(data: dict, month_key: str, owner: str) -> dict:
 def get_most_used_categories(data: dict) -> dict[str, list[str]]:
     """Get most frequently used categories by type."""
     df = pd.DataFrame(data.get("transactions", []))
+    custom_categories = data.get("custom_categories", {}) if isinstance(data.get("custom_categories"), dict) else {}
+
+    expense_all = list(dict.fromkeys(EXPENSE_CATEGORIES + custom_categories.get("expense", [])))
+    revenue_all = list(dict.fromkeys(REVENUE_CATEGORIES + custom_categories.get("revenue", [])))
+    savings_all = list(dict.fromkeys(SAVINGS_CATEGORIES + custom_categories.get("savings", [])))
+
     if df.empty:
-        return {"expense": EXPENSE_CATEGORIES, "revenue": REVENUE_CATEGORIES, "savings": SAVINGS_CATEGORIES}
+        return {"expense": expense_all, "revenue": revenue_all, "savings": savings_all}
     
     most_used = {}
     for entry_type in ["expense", "revenue", "savings"]:
@@ -1747,22 +1779,22 @@ def get_most_used_categories(data: dict) -> dict[str, list[str]]:
             sorted_categories = category_counts.index.tolist()
             # Add categories not yet used
             if entry_type == "expense":
-                all_cats = EXPENSE_CATEGORIES
+                all_cats = expense_all
             elif entry_type == "revenue":
-                all_cats = REVENUE_CATEGORIES
+                all_cats = revenue_all
             else:
-                all_cats = SAVINGS_CATEGORIES
+                all_cats = savings_all
             for cat in all_cats:
                 if cat not in sorted_categories:
                     sorted_categories.append(cat)
             most_used[entry_type] = sorted_categories
         else:
             if entry_type == "expense":
-                most_used[entry_type] = EXPENSE_CATEGORIES
+                most_used[entry_type] = expense_all
             elif entry_type == "revenue":
-                most_used[entry_type] = REVENUE_CATEGORIES
+                most_used[entry_type] = revenue_all
             else:
-                most_used[entry_type] = SAVINGS_CATEGORIES
+                most_used[entry_type] = savings_all
     
     return most_used
 
@@ -1998,7 +2030,7 @@ def show_month_selector(data: dict) -> None:
             st.session_state["selected_month"] = current_key
             st.rerun()
     with col2:
-        prev_key = previous_month_key(current_key)
+        prev_key = previous_month_key(st.session_state["selected_month"])
         if st.button("⬅️ Previous", key="nav_jump_prev_month_btn", use_container_width=True):
             if prev_key not in month_keys:
                 ensure_month_exists(data, prev_key)
@@ -2006,7 +2038,7 @@ def show_month_selector(data: dict) -> None:
             st.session_state["selected_month"] = prev_key
             st.rerun()
     with col3:
-        next_key = f"{int(current_key[:4])}-{int(current_key[5:]) + 1:02d}" if int(current_key[5:]) < 12 else f"{int(current_key[:4]) + 1}-01"
+        next_key = next_month_key(st.session_state["selected_month"])
         if st.button("➡️ Next", key="nav_jump_next_month_btn", use_container_width=True):
             if next_key not in month_keys:
                 ensure_month_exists(data, next_key)
@@ -2045,6 +2077,11 @@ def show_login_page() -> None:
                     <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 0.5rem;">Enter your username and password</p>
                 </div>
             """, unsafe_allow_html=True)
+
+            if not auth_is_configured():
+                st.error("⚠️ Login is not configured yet.")
+                st.caption("Set TYSHAWN_PASSWORD and LEXI_PASSWORD as environment variables, or set [auth] tyshawn_password and lexi_password in Streamlit secrets.")
+                return
             
             username = st.text_input(
                 "👤 Username",
@@ -2078,7 +2115,7 @@ def show_login_page() -> None:
         
         st.markdown("""
             <div style="text-align: center; color: #95a5a6; font-size: 0.85rem; margin-top: 2rem;">
-                <p>🔒 Your financial data is stored locally and securely</p>
+                <p>🔒 Your financial data is stored securely in the cloud</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -2150,8 +2187,8 @@ def plot_spending_by_category(df: pd.DataFrame, title: str = "Spending by Catego
     
     spending = expenses.groupby("category")["amount"].sum().sort_values(ascending=False).head(10)
     
-    fig, ax = plt.subplots(figsize=(10, 6), facecolor='#1e1e1e')
-    ax.set_facecolor('#1e1e1e')
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
+    ax.set_facecolor('white')
     
     # Enhanced color palette
     colors = ['#FF6B6B', '#FFA500', '#FFD93D', '#6BCB77', '#4D96FF', '#9D84B7', '#FF85B3', '#FFB84D', '#A8E6CF', '#FFB3BA']
@@ -2174,11 +2211,11 @@ def plot_spending_by_category(df: pd.DataFrame, title: str = "Spending by Catego
     
     # Style labels
     for text in texts:
-        text.set_color('#e0e0e0')
+        text.set_color('#2c3e50')
         text.set_fontsize(9)
         text.set_weight('bold')
     
-    ax.set_title(title, fontsize=13, fontweight='bold', color='#e0e0e0', pad=20)
+    ax.set_title(title, fontsize=13, fontweight='bold', color='#2c3e50', pad=20)
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
@@ -2194,7 +2231,7 @@ def show_spending_velocity(df: pd.DataFrame, month_key: str) -> None:
         return
     
     year, month = map(int, month_key.split("-"))
-    days_in_month = 31 if month in [1, 3, 5, 7, 8, 10, 12] else 30 if month != 2 else 28
+    days_in_month = calendar.monthrange(year, month)[1]
     days_elapsed = max(1, (date.today() - date(year, month, 1)).days + 1)
     
     if days_elapsed < days_in_month:
@@ -2264,8 +2301,8 @@ def show_budget_vs_actual(data: dict, month_key: str, owner: str) -> None:
     budget_vals = [float(budgeted_by_cat.get(cat, 0)) for cat in categories]
     
     # Create comparison chart
-    fig, ax = plt.subplots(figsize=(12, 6), facecolor='#1e1e1e')
-    ax.set_facecolor('#1e1e1e')
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor='white')
+    ax.set_facecolor('white')
     
     x = range(len(categories))
     width = 0.35
@@ -2274,19 +2311,19 @@ def show_budget_vs_actual(data: dict, month_key: str, owner: str) -> None:
     bars2 = ax.bar([i + width/2 for i in x], actual_vals, width, label='Actual', color='#e74c3c', edgecolor='white', linewidth=1.5, alpha=0.8)
     
     # Styling
-    ax.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#e0e0e0')
-    ax.set_title(f'Budget vs Actual Spending - {OWNER_LABELS[owner]}', fontsize=13, fontweight='bold', color='#e0e0e0', pad=15)
+    ax.set_ylabel('Amount ($)', fontsize=11, fontweight='bold', color='#2c3e50')
+    ax.set_title(f'Budget vs Actual Spending - {OWNER_LABELS[owner]}', fontsize=13, fontweight='bold', color='#2c3e50', pad=15)
     ax.set_xticks(x)
-    ax.set_xticklabels(categories, rotation=45, ha='right', color='#e0e0e0', fontsize=9)
-    ax.legend(fontsize=10, facecolor='#2a2a2a', edgecolor='#555', labelcolor='#e0e0e0')
-    ax.grid(axis='y', alpha=0.2, linestyle='--', linewidth=0.7)
+    ax.set_xticklabels(categories, rotation=45, ha='right', color='#2c3e50', fontsize=9)
+    ax.legend(fontsize=10, facecolor='white', edgecolor='#cccccc', labelcolor='#2c3e50')
+    ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.7)
     ax.set_axisbelow(True)
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}' if x >= 0 else f'-${abs(x):,.0f}'))
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_color('#555')
-    ax.spines['bottom'].set_color('#555')
-    ax.tick_params(colors='#e0e0e0')
+    ax.spines['left'].set_color('#cccccc')
+    ax.spines['bottom'].set_color('#cccccc')
+    ax.tick_params(colors='#555555')
     
     # Add value labels on bars
     for bars in [bars1, bars2]:
@@ -2295,7 +2332,7 @@ def show_budget_vs_actual(data: dict, month_key: str, owner: str) -> None:
             if height > 0:
                 ax.text(bar.get_x() + bar.get_width()/2., height,
                        f'${height:.0f}',
-                       ha='center', va='bottom', fontsize=8, color='#e0e0e0', weight='bold')
+                       ha='center', va='bottom', fontsize=8, color='#2c3e50', weight='bold')
     
     plt.tight_layout()
     st.pyplot(fig, use_container_width=True)
@@ -2467,7 +2504,7 @@ def show_savings_goals(data: dict) -> None:
                 st.session_state["adding_goal"] = False
                 st.rerun()
     
-    for goal_name, goal_data in data.get("savings_goals", {}).items():
+    for goal_name, goal_data in list(data.get("savings_goals", {}).items()):
         target = goal_data.get("target", 0.0)
         current = goal_data.get("current", 0.0)
         pct = (current / target * 100) if target > 0 else 0
@@ -2478,8 +2515,51 @@ def show_savings_goals(data: dict) -> None:
         with col2:
             if st.button("✏️", key=f"edit_goal_{goal_name}", help="Edit goal"):
                 st.session_state[f"edit_goal_{goal_name}"] = True
-    
-    save_json_dict(DATA_FILE, data)
+
+        if st.session_state.get(f"edit_goal_{goal_name}"):
+            with st.form(f"edit_goal_form_{goal_name}"):
+                st.markdown(f"**Edit Goal: {goal_name}**")
+                updated_target = st.number_input(
+                    "Target Amount",
+                    min_value=0.0,
+                    value=float(target),
+                    step=100.0,
+                    key=f"goal_target_{goal_name}",
+                )
+                updated_current = st.number_input(
+                    "Current Amount",
+                    min_value=0.0,
+                    value=float(current),
+                    step=50.0,
+                    key=f"goal_current_{goal_name}",
+                )
+
+                action_col1, action_col2, action_col3 = st.columns(3)
+                with action_col1:
+                    save_clicked = st.form_submit_button("💾 Save")
+                with action_col2:
+                    delete_clicked = st.form_submit_button("🗑️ Delete Goal")
+                with action_col3:
+                    cancel_clicked = st.form_submit_button("❌ Cancel")
+
+                if save_clicked:
+                    data["savings_goals"][goal_name]["target"] = float(updated_target)
+                    data["savings_goals"][goal_name]["current"] = float(updated_current)
+                    save_json_dict(DATA_FILE, data)
+                    st.session_state[f"edit_goal_{goal_name}"] = False
+                    st.success("✅ Goal updated.")
+                    st.rerun()
+
+                if delete_clicked:
+                    data["savings_goals"].pop(goal_name, None)
+                    save_json_dict(DATA_FILE, data)
+                    st.session_state[f"edit_goal_{goal_name}"] = False
+                    st.success("✅ Goal deleted.")
+                    st.rerun()
+
+                if cancel_clicked:
+                    st.session_state[f"edit_goal_{goal_name}"] = False
+                    st.rerun()
 
 
 # Dashboard page
@@ -2744,11 +2824,22 @@ def render_entry_form(data: dict, month_key: str, form_prefix: str) -> None:
         )
     with col4:
         if entry_type == "expense":
-            categories = most_used.get("expense", EXPENSE_CATEGORIES)
+            base_categories = most_used.get("expense", EXPENSE_CATEGORIES)
         elif entry_type == "revenue":
-            categories = most_used.get("revenue", REVENUE_CATEGORIES)
+            base_categories = most_used.get("revenue", REVENUE_CATEGORIES)
         else:
-            categories = most_used.get("savings", SAVINGS_CATEGORIES)
+            base_categories = most_used.get("savings", SAVINGS_CATEGORIES)
+
+        all_categories = get_user_categories(data, entry_type)
+        categories = [cat for cat in base_categories if cat in all_categories]
+        categories.extend([cat for cat in all_categories if cat not in categories])
+
+        if not categories:
+            categories = (
+                EXPENSE_CATEGORIES if entry_type == "expense"
+                else REVENUE_CATEGORIES if entry_type == "revenue"
+                else SAVINGS_CATEGORIES
+            )
 
         current_category = st.session_state.get(form_category_key, categories[0] if categories else "")
         if current_category not in categories:
@@ -2825,7 +2916,7 @@ def show_quick_add(data: dict) -> None:
             <p style="margin: 0.5rem 0 0 0; color: #7f8c8d; font-size: 1rem;">{month_label(month_key)}</p>
         </div>
     """, unsafe_allow_html=True)
-    st.caption("Quick Add stays available for manual entry only — templates just prefill the form and do not create automatic recurring payments.")
+    st.caption("Quick Add stays manual-only. Use the shortcut buttons below to prefill common entries.")
     st.divider()
 
     st.markdown("### 📋 Quick Templates")
@@ -2860,8 +2951,7 @@ def show_quick_add(data: dict) -> None:
             "description": "Gas",
         },
     }
-    saved_templates = get_transaction_templates(data)
-    template_buttons = list(quick_templates.items()) + list(saved_templates.items())
+    template_buttons = list(quick_templates.items())
 
     if template_buttons:
         template_cols = st.columns(min(4, len(template_buttons)))
@@ -2971,11 +3061,14 @@ def editable_transaction_table(data: dict, df: pd.DataFrame, section_title: str)
                         key=f"edit_owner_{section_title}_{row['id']}",
                     )
                     if entry_type == "expense":
-                        categories = EXPENSE_CATEGORIES
+                        base_categories = EXPENSE_CATEGORIES
                     elif entry_type == "revenue":
-                        categories = REVENUE_CATEGORIES
+                        base_categories = REVENUE_CATEGORIES
                     else:
-                        categories = SAVINGS_CATEGORIES
+                        base_categories = SAVINGS_CATEGORIES
+                    all_categories = get_user_categories(data, entry_type)
+                    categories = [cat for cat in base_categories if cat in all_categories]
+                    categories.extend([cat for cat in all_categories if cat not in categories])
                     category = st.selectbox(
                         "Category",
                         categories,
@@ -3075,6 +3168,7 @@ def show_tracker(data: dict) -> None:
             df["date"] = pd.to_datetime(df["date"]).dt.date
             df["entry_type_label"] = df["entry_type"].map(ENTRY_TYPE_LABELS)
             df["owner_label"] = df["owner"].map(OWNER_LABELS)
+            df["created_by_label"] = df["created_by"].map(DISPLAY_NAMES).fillna(df["created_by"])
     
     search_col1, search_col2, search_col3 = st.columns(3)
     
@@ -3142,7 +3236,7 @@ def show_tracker(data: dict) -> None:
         (filtered_df["amount"] <= st.session_state["search_max_amount"])
     ]
 
-    if st.session_state.get("search_start_date") and st.session_state.get("search_end_date"):
+    if not cross_month and st.session_state.get("search_start_date") and st.session_state.get("search_end_date"):
         filtered_df = filtered_df[
             (filtered_df["date"] >= pd.to_datetime(st.session_state["search_start_date"])) &
             (filtered_df["date"] <= pd.to_datetime(st.session_state["search_end_date"]))
@@ -3824,8 +3918,7 @@ def show_settings_page(data: dict) -> None:
         new_cat = st.text_input("Add new expense category", key="new_expense_cat", placeholder="e.g., Pet Care")
         if st.button("Add Expense Category", key="add_expense_cat_btn"):
             if new_cat and new_cat not in custom_expenses:
-                data["custom_categories"]["expense"].append(new_cat)
-                save_json_dict(DATA_FILE, data)
+                add_custom_category(data, "expense", new_cat)
                 st.success(f"✅ Added '{new_cat}' to expense categories")
                 st.rerun()
     
@@ -3852,8 +3945,7 @@ def show_settings_page(data: dict) -> None:
         new_cat = st.text_input("Add new revenue category", key="new_revenue_cat", placeholder="e.g., Freelance Work")
         if st.button("Add Revenue Category", key="add_revenue_cat_btn"):
             if new_cat and new_cat not in custom_revenue:
-                data["custom_categories"]["revenue"].append(new_cat)
-                save_json_dict(DATA_FILE, data)
+                add_custom_category(data, "revenue", new_cat)
                 st.success(f"✅ Added '{new_cat}' to revenue categories")
                 st.rerun()
     
@@ -3880,8 +3972,7 @@ def show_settings_page(data: dict) -> None:
         new_cat = st.text_input("Add new savings category", key="new_savings_cat", placeholder="e.g., Vacation Fund")
         if st.button("Add Savings Category", key="add_savings_cat_btn"):
             if new_cat and new_cat not in custom_savings:
-                data["custom_categories"]["savings"].append(new_cat)
-                save_json_dict(DATA_FILE, data)
+                add_custom_category(data, "savings", new_cat)
                 st.success(f"✅ Added '{new_cat}' to savings categories")
                 st.rerun()
     
