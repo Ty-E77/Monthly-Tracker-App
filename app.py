@@ -1246,6 +1246,34 @@ def init_session_state() -> None:
             st.session_state[key] = value
 
 
+def handle_mobile_page_change() -> None:
+    nav_items = {
+        "🏠 Dashboard": "dashboard",
+        "⚡ Quick Add": "quick_add",
+        "🧾 Monthly Tracker": "tracker",
+        "📘 Budget Planner": "budget",
+        "📊 Analytics": "analytics",
+        "🎯 Savings Goals": "goals",
+        "⚙️ Settings": "settings",
+    }
+    selected_label = st.session_state.get("mobile_page_switcher_select")
+    selected_page = nav_items.get(selected_label)
+    if selected_page:
+        st.session_state["page"] = selected_page
+
+
+def handle_mobile_month_change(data: dict) -> None:
+    selected_label = st.session_state.get("mobile_month_switcher_select")
+    if not selected_label:
+        return
+
+    selected_month = label_to_month_key(selected_label)
+    if selected_month != st.session_state.get("selected_month"):
+        st.session_state["selected_month"] = selected_month
+        ensure_month_exists(data, selected_month)
+        save_json_dict(DATA_FILE, data)
+
+
 def show_mobile_toolbar(data: dict) -> None:
     """Top toolbar for phone users with same navigation and month controls."""
     if not st.session_state.get("is_mobile_client", False):
@@ -1264,14 +1292,15 @@ def show_mobile_toolbar(data: dict) -> None:
     nav_labels = [label for _, label in nav_items]
     current_page = st.session_state.get("page", "dashboard")
     current_page_label = next((label for page, label in nav_items if page == current_page), nav_labels[0])
+    st.session_state["mobile_page_switcher_select"] = current_page_label
 
     col1, col2 = st.columns(2)
     with col1:
-        selected_page_label = st.selectbox(
+        st.selectbox(
             "Page",
             options=nav_labels,
-            index=nav_labels.index(current_page_label),
             key="mobile_page_switcher_select",
+            on_change=handle_mobile_page_change,
         )
     with col2:
         month_keys = sorted_month_keys(data)
@@ -1282,29 +1311,14 @@ def show_mobile_toolbar(data: dict) -> None:
             save_json_dict(DATA_FILE, data)
             month_keys = sorted_month_keys(data)
             month_labels = [month_label(month_key) for month_key in month_keys]
-        selected_month_label = st.selectbox(
+        st.session_state["mobile_month_switcher_select"] = month_label(st.session_state["selected_month"])
+        st.selectbox(
             "Month",
             options=month_labels,
-            index=month_keys.index(st.session_state["selected_month"]),
             key="mobile_month_switcher_select",
+            on_change=handle_mobile_month_change,
+            args=(data,),
         )
-
-    selected_page = next((page for page, label in nav_items if label == selected_page_label), current_page)
-    selected_month = label_to_month_key(selected_month_label)
-
-    page_changed = selected_page != st.session_state["page"]
-    month_changed = selected_month != st.session_state["selected_month"]
-
-    if month_changed:
-        st.session_state["selected_month"] = selected_month
-        ensure_month_exists(data, selected_month)
-        save_json_dict(DATA_FILE, data)
-
-    if page_changed:
-        st.session_state["page"] = selected_page
-
-    if page_changed or month_changed:
-        st.rerun()
 
     st.divider()
 
